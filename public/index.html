@@ -14,9 +14,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Vidstack 0.6.15 -->
-  <link href="https://cdn.jsdelivr.net/npm/vidstack@0.6.15/styles/community-skin/video.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/vidstack@0.6.15/dist/cdn/prod.min.js" defer></script>
+  <!-- Vidstack 1.x -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1/player/styles/base.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1/player/styles/default/theme.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1/player/styles/default/layouts/video.css" />
+  <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack@1/cdn/prod.js"></script>
 
   <style>
     /* ── Variables ── */
@@ -504,6 +506,7 @@
     #previewPlayer {
       width: 100%;
       aspect-ratio: 16/9;
+      background: #000;
     }
 
     media-player {
@@ -727,9 +730,16 @@
       </div>
       <div class="modal-body">
         <div id="previewPlayer">
-          <media-player id="kiroMediaPlayer" playsinline>
+          <media-player
+            id="kiroMediaPlayer"
+            view-type="video"
+            stream-type="on-demand"
+            log-level="warn"
+            crossorigin
+            playsinline
+          >
             <media-provider></media-provider>
-            <media-community-skin></media-community-skin>
+            <media-video-layout></media-video-layout>
           </media-player>
         </div>
       </div>
@@ -1095,26 +1105,23 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
 });
 
 // ── Player preview ───────────────────────────────────────
-let mediaPlayer = null;
-
-async function openPlayer(id, rawUrl, title) {
+function openPlayer(id, rawUrl, title) {
+  const player = document.getElementById('kiroMediaPlayer');
   document.getElementById('playerTitle').textContent = title || 'Preview';
 
-  await customElements.whenDefined('media-player');
-
-  const player = document.getElementById('kiroMediaPlayer');
-  const proxied = proxyUrl(rawUrl);
-  player.setAttribute('src', proxied);
-  player.setAttribute('title', title || '');
-  player.setAttribute('crossorigin', '');
+  // Vidstack 1.x: set src attribute directly on <media-player>
+  // The proxy URL bypasses archive.org CORS
+  player.setAttribute('src', proxyUrl(rawUrl));
+  if (title) player.setAttribute('title', title);
 
   playerModal.show();
 }
 
-// Stop video when modal closes
-document.getElementById('playerModal').addEventListener('hidden.bs.modal', () => {
+// Clear src when modal closes so video stops + frees memory
+document.getElementById('playerModal').addEventListener('hide.bs.modal', () => {
   const player = document.getElementById('kiroMediaPlayer');
   player.removeAttribute('src');
+  player.removeAttribute('title');
 });
 
 // ── Utils ────────────────────────────────────────────────
