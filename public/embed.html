@@ -5,19 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KiroPlyr</title>
 
-  <!-- Vidstack 1.x styles -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1/player/styles/base.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1/player/styles/default/theme.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1/player/styles/default/layouts/video.css" />
+  <!-- Vidstack 1.x CDN styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1.12.12/player/styles/base.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1.12.12/player/styles/default/theme.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1.12.12/player/styles/default/layouts/video.css" />
 
-  <!-- Vidstack 1.x CDN bundle (registers all custom elements) -->
-  <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack@1/cdn/prod.js"></script>
+  <!-- Vidstack 1.x CDN bundle — registers all custom elements -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack@1.12.12/cdn/prod.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-      height: 100%; width: 100%;
+      width: 100%; height: 100%;
       background: #000; overflow: hidden;
       font-family: system-ui, sans-serif;
     }
@@ -29,8 +29,7 @@
 
     /* ── Loader ── */
     #loader {
-      position: absolute; inset: 0; z-index: 20;
-      background: #000;
+      position: absolute; inset: 0; z-index: 20; background: #000;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 14px;
       transition: opacity 0.4s ease;
@@ -47,32 +46,27 @@
 
     #loader-text {
       font-size: 0.72rem; color: rgba(255,255,255,0.3);
-      letter-spacing: 0.07em; text-transform: uppercase;
+      letter-spacing: 0.08em; text-transform: uppercase;
     }
 
     /* ── Error ── */
     #err {
       display: none; position: absolute; inset: 0; z-index: 30;
-      background: #050505;
-      flex-direction: column; align-items: center; justify-content: center;
-      gap: 10px; text-align: center; padding: 28px;
+      background: #060606; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; text-align: center; padding: 32px;
     }
     #err.show { display: flex; }
     .err-icon {
-      width: 46px; height: 46px; border-radius: 50%;
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.2);
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 6px;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 4px;
     }
-    #err h3 { font-size: 0.9rem; font-weight: 600; color: #fafafa; }
-    #err-msg { font-size: 0.75rem; color: rgba(255,255,255,0.3); max-width: 280px; line-height: 1.6; }
+    #err h3 { font-size: 0.9rem; font-weight: 600; color: #fafafa; margin-bottom: 4px; }
+    #err-msg { font-size: 0.75rem; color: rgba(255,255,255,0.28); max-width: 300px; line-height: 1.6; word-break: break-all; }
 
     /* ── Player wrap ── */
-    #player-wrap {
-      width: 100%; height: 100%;
-      opacity: 0; transition: opacity 0.4s ease;
-    }
+    #player-wrap { width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s ease; }
     #player-wrap.show { opacity: 1; }
 
     media-player { width: 100%; height: 100%; }
@@ -95,10 +89,10 @@
       </svg>
     </div>
     <h3>Video unavailable</h3>
-    <p id="err-msg">This video could not be loaded.</p>
+    <p id="err-msg">Could not load this video.</p>
   </div>
 
-  <!-- Player — src injected by JS after fetching metadata -->
+  <!-- Player — src is set by JS after reading the URL from the path -->
   <div id="player-wrap">
     <media-player
       id="kiro-player"
@@ -118,16 +112,16 @@
 <script>
   const API_BASE = 'https://kiroplyr.onrender.com';
 
-  const loaderEl  = document.getElementById('loader');
-  const loaderTxt = document.getElementById('loader-text');
-  const errEl     = document.getElementById('err');
-  const errMsg    = document.getElementById('err-msg');
+  const loaderEl   = document.getElementById('loader');
+  const loaderTxt  = document.getElementById('loader-text');
+  const errEl      = document.getElementById('err');
+  const errMsg     = document.getElementById('err-msg');
   const playerWrap = document.getElementById('player-wrap');
-  const player    = document.getElementById('kiro-player');
+  const player     = document.getElementById('kiro-player');
 
   function showErr(msg) {
     loaderEl.classList.add('out');
-    errMsg.textContent = msg || 'Failed to load video.';
+    errMsg.textContent = msg || 'Could not load this video.';
     errEl.classList.add('show');
   }
 
@@ -143,53 +137,54 @@
     return `${API_BASE}/api/proxy?url=${encodeURIComponent(url)}`;
   }
 
-  function getId() {
-    const p = new URLSearchParams(location.search);
-    if (p.get('id')) return p.get('id');
-    const segs = location.pathname.split('/').filter(Boolean);
-    return segs[segs.length - 1] || null;
+  // Read the raw MP4 URL from the path
+  // Format: /embed/https://ia800409.us.archive.org/.../video.mp4
+  function getVideoUrl() {
+    const prefix = '/embed/';
+    const full   = location.pathname + location.search; // include query if URL had one
+    if (!full.startsWith(prefix)) return null;
+    return full.slice(prefix.length);
+  }
+
+  // Get a human-readable title from the filename
+  function titleFromUrl(url) {
+    try {
+      const part = url.split('/').pop().split('?')[0];
+      return decodeURIComponent(part)
+        .replace(/\.[^.]+$/, '')
+        .replace(/[_\-]+/g, ' ')
+        .trim() || 'KiroPlyr';
+    } catch { return 'KiroPlyr'; }
   }
 
   async function init() {
-    const id = getId();
-    if (!id) return showErr('No video ID in URL.');
+    const videoUrl = getVideoUrl();
 
-    try {
-      loaderTxt.textContent = 'Fetching video…';
-
-      const res = await fetch(`${API_BASE}/api/videos/${id}`);
-      if (!res.ok) throw new Error(`Video not found (${res.status})`);
-
-      const json = await res.json();
-      const video = json.data;
-      if (!video?.url) throw new Error('No video URL in response.');
-
-      document.title = video.title ? `${video.title} — KiroPlyr` : 'KiroPlyr';
-      loaderTxt.textContent = 'Starting player…';
-
-      // Wait for Vidstack custom elements to register from the module script
-      await customElements.whenDefined('media-player');
-
-      // Set the proxied src directly on <media-player>
-      // Vidstack 1.x supports this — it reads src attribute changes
-      player.setAttribute('src', proxyUrl(video.url));
-      if (video.title) player.setAttribute('title', video.title);
-
-      // Reveal on first playable signal
-      player.addEventListener('can-play', showPlayer, { once: true });
-      player.addEventListener('playing',  showPlayer, { once: true });
-      player.addEventListener('loaded-metadata', showPlayer, { once: true });
-
-      // Hard fallback — never stay stuck forever
-      setTimeout(showPlayer, 10000);
-
-    } catch (e) {
-      console.error('[KiroPlyr embed]', e);
-      showErr(e.message || 'Unexpected error.');
+    if (!videoUrl || !/^https?:\/\//i.test(videoUrl)) {
+      return showErr('No valid video URL found in the embed path.');
     }
+
+    const title = titleFromUrl(videoUrl);
+    document.title = `${title} — KiroPlyr`;
+    loaderTxt.textContent = 'Starting player…';
+
+    // Wait for Vidstack custom elements registered by the module script above
+    await customElements.whenDefined('media-player');
+
+    // Set proxied src directly on <media-player>
+    // Vidstack 1.x reads the src attribute and starts loading immediately
+    player.setAttribute('src', proxyUrl(videoUrl));
+    player.setAttribute('title', title);
+
+    // Reveal when player signals it's ready to play
+    player.addEventListener('can-play',        showPlayer, { once: true });
+    player.addEventListener('playing',         showPlayer, { once: true });
+    player.addEventListener('loaded-metadata', showPlayer, { once: true });
+
+    // Hard fallback — never stay stuck forever
+    setTimeout(showPlayer, 10000);
   }
 
-  // Wait for DOM + run
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
