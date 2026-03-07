@@ -5,201 +5,197 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KiroPlyr</title>
 
-  <!-- Vidstack 0.6.15 CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/vidstack@0.6.15/styles/community-skin/video.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/vidstack@0.6.15/dist/cdn/prod.min.js" defer></script>
+  <!-- Vidstack 1.x CSS (no old 0.6.x CDN script) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@^1.0.0/player/styles/base.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@^1.0.0/player/styles/default/theme.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@^1.0.0/player/styles/default/layouts/video.css" />
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-      height: 100%;
-      width: 100%;
-      background: #000;
-      color: #fff;
-      font-family: 'Outfit', system-ui, sans-serif;
-      overflow: hidden;
+      height: 100%; width: 100%;
+      background: #000; overflow: hidden;
+      font-family: system-ui, sans-serif;
     }
 
     #app {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      position: relative;
+      position: relative; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
     }
 
-    /* ── Loader ── */
+    /* Loader */
     #loader {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
+      position: absolute; inset: 0; z-index: 20;
       background: #000;
-      z-index: 10;
-      transition: opacity 0.3s ease;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      transition: opacity 0.35s ease;
     }
+    #loader.out { opacity: 0; pointer-events: none; }
 
-    #loader.hidden { opacity: 0; pointer-events: none; }
-
-    .spinner {
-      width: 34px;
-      height: 34px;
-      border: 2.5px solid rgba(255,255,255,0.1);
-      border-top-color: rgba(255,255,255,0.7);
-      border-radius: 50%;
-      animation: spin 0.65s linear infinite;
+    .ring {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.08);
+      border-top-color: rgba(255,255,255,0.75);
+      animation: spin 0.7s linear infinite;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    #loader-label {
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.35);
-      letter-spacing: 0.05em;
+    #loader-text {
+      font-size: 0.72rem; color: rgba(255,255,255,0.3);
+      letter-spacing: 0.06em; text-transform: uppercase;
     }
 
-    /* ── Error ── */
-    #error-screen {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      position: absolute;
-      inset: 0;
-      background: #0a0a0a;
-      padding: 28px;
-      text-align: center;
+    /* Error */
+    #err {
+      display: none; position: absolute; inset: 0; z-index: 30;
+      background: #050505;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; text-align: center; padding: 28px;
     }
+    #err.show { display: flex; }
 
-    #error-screen.show { display: flex; }
-
-    #error-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .err-icon {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: rgba(239,68,68,0.09);
+      border: 1px solid rgba(239,68,68,0.22);
+      display: flex; align-items: center; justify-content: center;
       margin-bottom: 4px;
     }
+    #err h3 { font-size: 0.875rem; font-weight: 600; color: #fafafa; }
+    #err-msg { font-size: 0.75rem; color: rgba(255,255,255,0.3); max-width: 280px; line-height: 1.6; }
 
-    #error-title { font-size: 0.9rem; font-weight: 600; color: #fafafa; }
-
-    #error-msg { font-size: 0.78rem; color: rgba(255,255,255,0.35); max-width: 260px; line-height: 1.55; }
-
-    /* ── Player wrap ── */
+    /* Player */
     #player-wrap {
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      width: 100%; height: 100%;
+      opacity: 0; transition: opacity 0.35s ease;
     }
+    #player-wrap.show { opacity: 1; }
 
-    #player-wrap.ready { opacity: 1; }
-
-    media-player {
-      width: 100%;
-      height: 100%;
-      --media-font-family: 'Outfit', system-ui, sans-serif;
-    }
+    media-player { width: 100%; height: 100%; }
   </style>
 </head>
 <body>
 <div id="app">
 
   <div id="loader">
-    <div class="spinner"></div>
-    <span id="loader-label">Loading…</span>
+    <div class="ring"></div>
+    <span id="loader-text">Loading…</span>
   </div>
 
-  <div id="error-screen">
-    <div id="error-icon">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <div id="err">
+    <div class="err-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
     </div>
-    <p id="error-title">Video unavailable</p>
-    <p id="error-msg">This video could not be loaded.</p>
+    <h3>Video unavailable</h3>
+    <p id="err-msg">This video could not be loaded.</p>
   </div>
 
   <div id="player-wrap">
-    <media-player id="kiro-player" playsinline>
-      <media-provider></media-provider>
-      <media-community-skin></media-community-skin>
+    <media-player
+      id="kiro"
+      view-type="video"
+      stream-type="on-demand"
+      log-level="warn"
+      crossorigin
+      playsinline
+    >
+      <media-provider>
+        <media-poster class="vds-poster"></media-poster>
+        <source id="video-src" src="" type="video/mp4" />
+      </media-provider>
+      <media-video-layout></media-video-layout>
     </media-player>
   </div>
 
 </div>
-<script>
+
+<!-- Vidstack 1.x — ES module, replaces old 0.6.x CDN script -->
+<script type="module">
+  import 'https://cdn.jsdelivr.net/npm/vidstack@^1.0.0/player';
+  import 'https://cdn.jsdelivr.net/npm/vidstack@^1.0.0/player/layouts/default';
+  import 'https://cdn.jsdelivr.net/npm/vidstack@^1.0.0/player/ui';
+
   const API_BASE = 'https://kiroplyr.onrender.com';
 
-  function getVideoId() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('id')) return params.get('id');
-    const parts = window.location.pathname.split('/').filter(Boolean);
+  function getId() {
+    const p = new URLSearchParams(location.search);
+    if (p.get('id')) return p.get('id');
+    const parts = location.pathname.split('/').filter(Boolean);
     return parts[parts.length - 1] || null;
   }
 
-  function proxyUrl(url) {
+  function proxy(url) {
     return `${API_BASE}/api/proxy?url=${encodeURIComponent(url)}`;
   }
 
-  function showError(msg) {
-    document.getElementById('loader').classList.add('hidden');
-    document.getElementById('error-msg').textContent = msg || 'Failed to load video.';
-    document.getElementById('error-screen').classList.add('show');
+  const loaderEl  = document.getElementById('loader');
+  const loaderTxt = document.getElementById('loader-text');
+  const errEl     = document.getElementById('err');
+  const errMsg    = document.getElementById('err-msg');
+  const wrap      = document.getElementById('player-wrap');
+  const player    = document.getElementById('kiro');
+  const srcEl     = document.getElementById('video-src');
+
+  function showErr(msg) {
+    loaderEl.classList.add('out');
+    errMsg.textContent = msg || 'Failed to load video.';
+    errEl.classList.add('show');
+  }
+
+  function showPlayer() {
+    loaderEl.classList.add('out');
+    wrap.classList.add('show');
   }
 
   async function init() {
-    const id = getVideoId();
-    if (!id) return showError('No video ID provided in the URL.');
+    const id = getId();
+    if (!id) return showErr('No video ID found in URL.');
 
     try {
+      loaderTxt.textContent = 'Fetching video…';
+
       const res = await fetch(`${API_BASE}/api/videos/${id}`);
       if (!res.ok) throw new Error(`Video not found (${res.status})`);
 
-      const json = await res.json();
-      const video = json.data;
-      if (!video?.url) throw new Error('Missing video source URL.');
+      const { data: video } = await res.json();
+      if (!video?.url) throw new Error('Missing video URL.');
 
       document.title = video.title ? `${video.title} — KiroPlyr` : 'KiroPlyr';
-      document.getElementById('loader-label').textContent = 'Preparing player…';
+      loaderTxt.textContent = 'Starting player…';
 
+      // Wait for Vidstack web components to register
       await customElements.whenDefined('media-player');
 
-      const player = document.getElementById('kiro-player');
-      player.setAttribute('src', proxyUrl(video.url));
-      player.setAttribute('title', video.title || '');
-      player.setAttribute('crossorigin', '');
+      // Point source to proxy — bypasses archive.org CORS restriction
+      srcEl.setAttribute('src', proxy(video.url));
+      if (video.title) player.setAttribute('title', video.title);
 
-      // Show player when ready
-      const showPlayer = () => {
-        document.getElementById('loader').classList.add('hidden');
-        document.getElementById('player-wrap').classList.add('ready');
-      };
+      // Tell Vidstack to load the new source
+      if (typeof player.load === 'function') player.load();
 
-      player.addEventListener('can-play', showPlayer, { once: true });
+      // Show player on first playback event
+      const reveal = () => showPlayer();
+      player.addEventListener('can-play',  reveal, { once: true });
+      player.addEventListener('playing',   reveal, { once: true });
 
-      // Fallback: show after 5s even if event doesn't fire
-      setTimeout(showPlayer, 5000);
+      // Hard fallback after 8s — prevents infinite spinner on slow connections
+      setTimeout(showPlayer, 8000);
 
-    } catch (err) {
-      console.error('[KiroPlyr]', err);
-      showError(err.message || 'Unexpected error.');
+    } catch (e) {
+      console.error('[KiroPlyr]', e);
+      showErr(e.message || 'Unexpected error.');
     }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  document.readyState === 'loading'
+    ? document.addEventListener('DOMContentLoaded', init)
+    : init();
 </script>
 </body>
 </html>
