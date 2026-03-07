@@ -69,13 +69,14 @@ function auth(req, res, next) {
 }
 
 // ── Build response links for a video ───────────────────────────
-// directUrl → proxy of the raw MP4 (usable anywhere, CORS-free)
-// embedUrl  → embed.html page that plays it in Vidstack
+// directUrl → proxy of the raw MP4 (CORS-free, streamable anywhere)
+// embedUrl  → /embed?v=<raw-mp4-url>
+//   e.g. https://kiroplyr.onrender.com/embed?v=https://ia800409.us.archive.org/...mp4
 function buildLinks(host, video) {
-  const proxyBase = `https://${host}`;
+  const base = `https://${host}`;
   return {
-    directUrl: `${proxyBase}/api/proxy?url=${encodeURIComponent(video.url)}`,
-    embedUrl:  `${proxyBase}/embed.html?id=${video._id}`,
+    directUrl: `${base}/api/proxy?url=${encodeURIComponent(video.url)}`,
+    embedUrl:  `${base}/embed?v=${encodeURIComponent(video.url)}`,
   };
 }
 
@@ -265,6 +266,12 @@ app.options("/api/proxy", (_, res) => {
   res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "*");
   res.sendStatus(204);
+});
+
+// ── /embed — serve embed.html, video URL is in ?v= query param ──
+// e.g. GET /embed?v=https://ia800409.us.archive.org/.../video.mp4
+app.get("/embed", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "embed.html"));
 });
 
 // ── SPA fallback ────────────────────────────────────────────────
