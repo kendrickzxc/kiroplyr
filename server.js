@@ -1,57 +1,63 @@
 // =========================================================
-// KiroPlayr server.js
+// KiroPlayr server.js — reworked
 // =========================================================
-const express = require("express");
+const express  = require("express");
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const cors = require("cors");
-const axios = require("axios");
-const path = require("path");
-const http = require("http");
-const https = require("https");
+const bcrypt   = require("bcryptjs");
+const jwt      = require("jsonwebtoken");
+const cors     = require("cors");
+const axios    = require("axios");
+const path     = require("path");
+const http     = require("http");
+const https    = require("https");
 
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: "*", credentials: true }));
-
-// ── Serve static files (signin.html, index.html, embed.html) ──
 app.use(express.static(path.join(__dirname, "public")));
 
-const MONGO_URI =
-  "mongodb+srv://ryoevisu:XaneKath1@cluster0.5hy2uez.mongodb.net/kiroplayr?appName=Cluster0";
+// ── Config ─────────────────────────────────────────────────────
+const MONGO_URI  = "mongodb+srv://ryoevisu:XaneKath1@cluster0.5hy2uez.mongodb.net/kiroplayr?appName=Cluster0";
 const JWT_SECRET = "kiroplayr_secret_key_2024";
-const PORT = process.env.PORT || 3000;
+const PORT       = process.env.PORT || 3000;
 
-// ── Reusable HTTP agents (keep-alive = faster repeat requests) ──
-const httpAgent  = new http.Agent({ keepAlive: true });
+// Keep-alive agents for faster repeated connections to archive.org
+const httpAgent  = new http.Agent ({ keepAlive: true });
 const httpsAgent = new https.Agent({ keepAlive: true, rejectUnauthorized: false });
 
-// ── DB ────────────────────────────────────────────────────────
+// ── MongoDB ────────────────────────────────────────────────────
 mongoose.connect(MONGO_URI).then(() => console.log("[DB] Connected"));
 
-const AdminSchema = new mongoose.Schema({ username: { type: String, unique: true }, password: String });
-const FolderSchema = new mongoose.Schema({ name: String }, { timestamps: true });
-const VideoSchema = new mongoose.Schema(
-  { folderId: mongoose.Schema.Types.ObjectId, title: String, url: String },
-  { timestamps: true }
-);
-const Admin  = mongoose.model("Admin",  AdminSchema);
-const Folder = mongoose.model("Folder", FolderSchema);
-const Video  = mongoose.model("Video",  VideoSchema);
+const Admin  = mongoose.model("Admin",  new mongoose.Schema({
+  username: { type: String, unique: true },
+  password: String,
+}));
 
-// Seed admin
-async function seedAdmin() {
-  const exists = await Admin.findOne({ username: "kiro" });
-  if (!exists) {
+const Folder = mongoose.model("Folder", new mongoose.Schema(
+  { name: String },
+  { timestamps: true }
+));
+
+// Video stores the raw MP4 url as saved — proxy wraps it on the fly
+const Video  = mongoose.model("Video",  new mongoose.Schema(
+  {
+    folderId: mongoose.Schema.Types.ObjectId,
+    title:    String,
+    url:      String,   // raw MP4 link e.g. https://ia800409.us.archive.org/21/items/...mp4
+  },
+  { timestamps: true }
+));
+
+// Seed default admin
+(async () => {
+  if (!await Admin.findOne({ username: "kiro" })) {
     await Admin.create({ username: "kiro", password: await bcrypt.hash("XaneKath1", 10) });
     console.log("[Auth] Admin seeded");
   }
-}
-seedAdmin();
+})();
 
-// ── Auth middleware ───────────────────────────────────────────
-function authMiddleware(req, res, next) {
+// ── Auth middleware ─────────────────────────────────────────────
+function auth(req, res, next) {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) return res.status(401).json({ error: "Unauthorized" });
   try {
@@ -62,181 +68,209 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// ── Auth routes ───────────────────────────────────────────────
-app.post("/api/auth/login", async (req, res) => {
-  const { username, password } = req.body;
-  const admin = await Admin.findOne({ username });
-  if (!admin || !(await bcrypt.compare(password, admin.password)))
-    return res.status(401).json({ error: "Invalid credentials" });
-  const token = jwt.sign({ sub: admin._id, username: admin.username }, JWT_SECRET, { expiresIn: "7d" });
-  // Flat response — token/username at root level
-  res.json({ token, username: admin.username, role: "admin" });
-});
-
-// ── Folder routes ─────────────────────────────────────────────
-app.get("/api/folders", authMiddleware, async (req, res) => {
-  const folders = await Folder.find().sort({ createdAt: -1 });
-  res.json({ data: folders });
-});
-app.post("/api/folders", authMiddleware, async (req, res) => {
-  const folder = await Folder.create({ name: req.body.name });
-  res.status(201).json({ data: folder });
-});
-app.patch("/api/folders/:id", authMiddleware, async (req, res) => {
-  const folder = await Folder.findByIdAndUpdate(req.params.id, { name: req.body.name }, { new: true });
-  res.json({ data: folder });
-});
-app.delete("/api/folders/:id", authMiddleware, async (req, res) => {
-  await Folder.findByIdAndDelete(req.params.id);
-  await Video.deleteMany({ folderId: req.params.id }); // cascade
-  res.json({ data: { success: true } });
-});
-
-// ── Video helpers ─────────────────────────────────────────────
-function makeLinks(req, id) {
-  const base = req.protocol + "://" + req.get("host");
+// ── Build response links for a video ───────────────────────────
+// directUrl → proxy of the raw MP4 (usable anywhere, CORS-free)
+// embedUrl  → embed.html page that plays it in Vidstack
+function buildLinks(host, video) {
+  const proxyBase = `https://${host}`;
   return {
-    directUrl: `${base}/api/proxy?url=${encodeURIComponent(base + "/api/videos/" + id)}`,
-    embedUrl:  `${base}/embed.html?id=${id}`,
+    directUrl: `${proxyBase}/api/proxy?url=${encodeURIComponent(video.url)}`,
+    embedUrl:  `${proxyBase}/embed.html?id=${video._id}`,
   };
 }
 
-// ── Video routes ──────────────────────────────────────────────
-app.get("/api/videos/folder/:folderId", authMiddleware, async (req, res) => {
+function withLinks(req, video) {
+  return { ...video.toObject(), ...buildLinks(req.get("host"), video) };
+}
+
+// ── Auth ────────────────────────────────────────────────────────
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const admin = await Admin.findOne({ username });
+    if (!admin || !(await bcrypt.compare(password, admin.password)))
+      return res.status(401).json({ error: "Invalid credentials" });
+    const token = jwt.sign(
+      { sub: admin._id, username: admin.username },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    res.json({ token, username: admin.username, role: "admin" });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Folders ─────────────────────────────────────────────────────
+app.get("/api/folders", auth, async (req, res) => {
+  const folders = await Folder.find().sort({ createdAt: -1 });
+  res.json({ data: folders });
+});
+
+app.post("/api/folders", auth, async (req, res) => {
+  const folder = await Folder.create({ name: req.body.name });
+  res.status(201).json({ data: folder });
+});
+
+app.patch("/api/folders/:id", auth, async (req, res) => {
+  const folder = await Folder.findByIdAndUpdate(
+    req.params.id, { name: req.body.name }, { new: true }
+  );
+  res.json({ data: folder });
+});
+
+app.delete("/api/folders/:id", auth, async (req, res) => {
+  await Folder.findByIdAndDelete(req.params.id);
+  await Video.deleteMany({ folderId: req.params.id }); // cascade delete videos
+  res.json({ data: { success: true } });
+});
+
+// ── Videos ──────────────────────────────────────────────────────
+app.get("/api/videos/folder/:folderId", auth, async (req, res) => {
   const videos = await Video.find({ folderId: req.params.folderId }).sort({ createdAt: -1 });
-  res.json({ data: videos.map((v) => ({ ...v.toObject(), ...makeLinks(req, v._id) })) });
+  res.json({ data: videos.map(v => withLinks(req, v)) });
 });
+
+// Public — embed.html calls this to get the video URL
 app.get("/api/videos/:id", async (req, res) => {
-  const video = await Video.findById(req.params.id);
-  if (!video) return res.status(404).json({ error: "Not found" });
-  res.json({ data: { ...video.toObject(), ...makeLinks(req, video._id) } });
+  try {
+    const video = await Video.findById(req.params.id);
+    if (!video) return res.status(404).json({ error: "Video not found" });
+    res.json({ data: withLinks(req, video) });
+  } catch {
+    res.status(400).json({ error: "Invalid video ID" });
+  }
 });
-app.post("/api/videos", authMiddleware, async (req, res) => {
-  const video = await Video.create(req.body);
-  res.status(201).json({ data: { ...video.toObject(), ...makeLinks(req, video._id) } });
+
+app.post("/api/videos", auth, async (req, res) => {
+  const { folderId, title, url } = req.body;
+  if (!folderId || !title || !url)
+    return res.status(400).json({ error: "folderId, title, and url are required" });
+  const video = await Video.create({ folderId, title, url });
+  res.status(201).json({ data: withLinks(req, video) });
 });
-app.patch("/api/videos/:id", authMiddleware, async (req, res) => {
+
+app.patch("/api/videos/:id", auth, async (req, res) => {
   const video = await Video.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json({ data: { ...video.toObject(), ...makeLinks(req, video._id) } });
+  if (!video) return res.status(404).json({ error: "Video not found" });
+  res.json({ data: withLinks(req, video) });
 });
-app.delete("/api/videos/:id", authMiddleware, async (req, res) => {
+
+app.delete("/api/videos/:id", auth, async (req, res) => {
   await Video.findByIdAndDelete(req.params.id);
   res.json({ data: { success: true } });
 });
 
-// ── CORS Bypass Proxy ─────────────────────────────────────────
-// Handles range requests so video seeking works correctly
-app.get("/api/proxy", async (req, res) => {
-  const target = decodeURIComponent(req.query.url || "");
-  if (!target) return res.status(400).json({ error: "Missing url param" });
+// ── Proxy — CORS bypass for archive.org (and any MP4 host) ─────
+//
+// Supports:
+//   GET  /api/proxy?url=<encoded-mp4-url>   — stream video
+//   HEAD /api/proxy?url=<encoded-mp4-url>   — metadata / duration check
+//
+// Range requests (seeking) are forwarded correctly so Vidstack
+// can scrub to any position without re-downloading from the start.
 
-  // Block non-http/https URLs for safety
-  if (!/^https?:\/\//i.test(target)) return res.status(400).json({ error: "Invalid URL" });
+function proxyHandler(req, res) {
+  const raw = req.query.url;
+  if (!raw) return res.status(400).json({ error: "Missing ?url param" });
 
+  let target;
   try {
-    const isRange  = !!req.headers["range"];
-    const isHead   = req.method === "HEAD";
+    target = decodeURIComponent(raw);
+  } catch {
+    return res.status(400).json({ error: "Malformed URL encoding" });
+  }
 
-    const upstreamHeaders = {
-      "User-Agent":      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122 Safari/537.36",
-      "Accept":          "*/*",
-      "Accept-Language": "en-US,en;q=0.9",
-      "Accept-Encoding": "identity",           // no gzip — we stream raw bytes
-      "Referer":         "https://archive.org/",
-      "Origin":          "https://archive.org",
-      "Connection":      "keep-alive",
-    };
+  if (!/^https?:\/\//i.test(target))
+    return res.status(400).json({ error: "Only http/https URLs allowed" });
 
-    if (isRange) upstreamHeaders["Range"] = req.headers["range"];
+  const isHead  = req.method === "HEAD";
+  const range   = req.headers["range"];
 
-    const upstream = await axios({
-      method:       isHead ? "head" : "get",
-      url:          target,
-      responseType: isHead ? "stream" : "stream",
-      headers:      upstreamHeaders,
-      timeout:      60000,          // 60s — archive.org can be slow to start
-      maxRedirects: 10,
-      httpAgent,
-      httpsAgent,
-      decompress:   false,          // don't decompress — pass raw
-    });
+  const upHeaders = {
+    "User-Agent":      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+    "Accept":          "*/*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "identity",      // raw bytes — no gzip compression in stream
+    "Referer":         "https://archive.org/",
+    "Origin":          "https://archive.org",
+    "Connection":      "keep-alive",
+  };
+  if (range) upHeaders["Range"] = range;
 
-    // ── CORS response headers ──────────────────────────────────
-    res.setHeader("Access-Control-Allow-Origin",      "*");
-    res.setHeader("Access-Control-Allow-Headers",     "*");
-    res.setHeader("Access-Control-Allow-Methods",     "GET, HEAD, OPTIONS");
-    res.setHeader("Cross-Origin-Resource-Policy",     "cross-origin");
-    res.setHeader("Cross-Origin-Embedder-Policy",     "unsafe-none");
-    res.setHeader("Accept-Ranges",                    "bytes");
+  // Set CORS + caching headers before we even hit upstream
+  res.setHeader("Access-Control-Allow-Origin",   "*");
+  res.setHeader("Access-Control-Allow-Headers",  "*");
+  res.setHeader("Access-Control-Allow-Methods",  "GET, HEAD, OPTIONS");
+  res.setHeader("Cross-Origin-Resource-Policy",  "cross-origin");
+  res.setHeader("Cross-Origin-Embedder-Policy",  "unsafe-none");
+  res.setHeader("Accept-Ranges",                 "bytes");
+  // Let browsers & CDN cache proxy responses for 1 hour
+  res.setHeader("Cache-Control",                 "public, max-age=3600");
 
-    // ── Forward content headers ────────────────────────────────
-    const forward = ["content-type","content-length","content-range","last-modified","etag"];
+  axios({
+    method:       isHead ? "head" : "get",
+    url:          target,
+    responseType: "stream",
+    headers:      upHeaders,
+    timeout:      90_000,          // 90s — archive.org can be slow on first byte
+    maxRedirects: 10,
+    httpAgent,
+    httpsAgent,
+    decompress:   false,
+  })
+  .then(upstream => {
+    // Mirror relevant headers from upstream
+    const forward = [
+      "content-type",
+      "content-length",
+      "content-range",
+      "last-modified",
+      "etag",
+    ];
     forward.forEach(h => {
       if (upstream.headers[h]) res.setHeader(h, upstream.headers[h]);
     });
 
-    // Status: 206 for range, otherwise mirror upstream
-    const status = isRange ? 206 : (upstream.status >= 200 && upstream.status < 300 ? 200 : upstream.status);
+    // 206 Partial Content for range requests, otherwise use upstream status
+    const status = range
+      ? 206
+      : upstream.status >= 200 && upstream.status < 300
+        ? 200
+        : upstream.status;
+
     res.status(status);
 
     if (isHead) return res.end();
 
-    // Pipe stream — abort upstream if client disconnects
-    req.on("close", () => {
-      if (upstream.data?.destroy) upstream.data.destroy();
-    });
+    // Destroy upstream if client disconnects (saves bandwidth)
+    req.on("close", () => upstream.data?.destroy?.());
 
     upstream.data.pipe(res);
-
-  } catch (e) {
+  })
+  .catch(e => {
     const status = e.response?.status || 502;
-    const msg    = e.response?.statusText || e.message || "Proxy fetch failed";
-    console.error("[Proxy error]", status, msg, target);
+    const msg    = e.code === "ECONNABORTED"
+      ? "Upstream timed out"
+      : e.response?.statusText || e.message || "Proxy fetch failed";
+    console.error("[proxy]", status, msg, "→", target);
     if (!res.headersSent) res.status(status).json({ error: msg });
-  }
-});
+  });
+}
 
-// Handle OPTIONS preflight for proxy
-app.options("/api/proxy", (req, res) => {
+app.get    ("/api/proxy", proxyHandler);
+app.head   ("/api/proxy", proxyHandler);
+app.options("/api/proxy", (_, res) => {
   res.setHeader("Access-Control-Allow-Origin",  "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "*");
   res.sendStatus(204);
 });
 
-// Also support HEAD on proxy for metadata checks (video duration etc.)
-app.head("/api/proxy", async (req, res) => {
-  req.method = "HEAD";
-  // Reuse GET handler logic — express won't match GET for HEAD automatically here
-  const target = decodeURIComponent(req.query.url || "");
-  if (!target) return res.status(400).end();
-  try {
-    const upstream = await axios.head(target, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Referer":    "https://archive.org/",
-        "Origin":     "https://archive.org",
-      },
-      timeout: 20000,
-      maxRedirects: 10,
-      httpsAgent,
-      httpAgent,
-    });
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Accept-Ranges", "bytes");
-    ["content-type","content-length"].forEach(h => {
-      if (upstream.headers[h]) res.setHeader(h, upstream.headers[h]);
-    });
-    res.status(200).end();
-  } catch {
-    res.status(502).end();
-  }
-});
-
-// ── SPA fallback ──────────────────────────────────────────────
-app.get("*", (req, res) => {
+// ── SPA fallback ────────────────────────────────────────────────
+app.use((req, res) => {
   if (req.path.startsWith("/api/")) return res.status(404).json({ error: "Not found" });
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.listen(PORT, () => console.log(`KiroPlayr running on port ${PORT}`));
+app.listen(PORT, () => console.log(`[KiroPlayr] Running on port ${PORT}`));
