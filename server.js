@@ -7,17 +7,21 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const axios = require("axios");
+const path = require("path");
 
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: "*", credentials: true }));
+
+// ── Serve static files from /public ──────────────────────
+app.use(express.static(path.join(__dirname, "public")));
 
 const MONGO_URI =
   "mongodb+srv://ryoevisu:XaneKath1@cluster0.5hy2uez.mongodb.net/kiroplayr?appName=Cluster0";
 const JWT_SECRET = "kiroplayr_secret_key_2024";
 const PORT = process.env.PORT || 3000;
 
-// ── DB ──────────────────────────────────────────────────
+// ── DB ────────────────────────────────────────────────────
 mongoose.connect(MONGO_URI).then(() => console.log("[DB] Connected"));
 
 const AdminSchema = new mongoose.Schema({ username: { type: String, unique: true }, password: String });
@@ -40,7 +44,7 @@ async function seedAdmin() {
 }
 seedAdmin();
 
-// ── Auth middleware ──────────────────────────────────────
+// ── Auth middleware ───────────────────────────────────────
 function authMiddleware(req, res, next) {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) return res.status(401).json({ error: "Unauthorized" });
@@ -52,17 +56,18 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// ── Auth routes ──────────────────────────────────────────
+// ── Auth routes ───────────────────────────────────────────
 app.post("/api/auth/login", async (req, res) => {
   const { username, password } = req.body;
   const admin = await Admin.findOne({ username });
   if (!admin || !(await bcrypt.compare(password, admin.password)))
     return res.status(401).json({ error: "Invalid credentials" });
   const token = jwt.sign({ sub: admin._id, username: admin.username }, JWT_SECRET, { expiresIn: "7d" });
-  res.json({ data: { token, username: admin.username } });
+  // Flat response so client can access data.token, data.username directly
+  res.json({ token, username: admin.username, role: "admin" });
 });
 
-// ── Folder routes ────────────────────────────────────────
+// ── Folder routes ─────────────────────────────────────────
 app.get("/api/folders", authMiddleware, async (req, res) => {
   const folders = await Folder.find().sort({ createdAt: -1 });
   res.json({ data: folders });
@@ -77,17 +82,21 @@ app.patch("/api/folders/:id", authMiddleware, async (req, res) => {
 });
 app.delete("/api/folders/:id", authMiddleware, async (req, res) => {
   await Folder.findByIdAndDelete(req.params.id);
+  // Also delete all videos in this folder
+  await Video.deleteMany({ folderId: req.params.id });
   res.json({ data: { success: true } });
 });
 
-// ── Video routes ─────────────────────────────────────────
+// ── Video helpers ─────────────────────────────────────────
 function makeLinks(req, id) {
   const base = req.protocol + "://" + req.get("host");
   return {
     directUrl: base + "/api/proxy?url=" + encodeURIComponent(base + "/api/videos/" + id),
-    embedUrl: base + "/embed/" + id,
+    embedUrl:  base + "/embed.html?id=" + id,
   };
 }
+
+// ── Video routes ──────────────────────────────────────────
 app.get("/api/videos/folder/:folderId", authMiddleware, async (req, res) => {
   const videos = await Video.find({ folderId: req.params.folderId }).sort({ createdAt: -1 });
   res.json({ data: videos.map((v) => ({ ...v.toObject(), ...makeLinks(req, v._id) })) });
@@ -117,26 +126,26 @@ app.get("/api/proxy", async (req, res) => {
   try {
     const range = req.headers["range"];
     const upstream = await axios.get(target, {
-      responseType: 'stream',
+      responseType: "stream",
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122 Safari/537.36',
-        'Referer': 'https://archive.org/',
-        'Origin': 'https://archive.org',
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122 Safari/537.36",
+        "Referer": "https://archive.org/",
+        "Origin": "https://archive.org",
         ...(range ? { Range: range } : {}),
       },
       timeout: 30000,
       maxRedirects: 5,
     });
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', '*');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.setHeader('Accept-Ranges', 'bytes');
-    const ct = upstream.headers['content-type'];
-    if (ct) res.setHeader('Content-Type', ct);
-    const cl = upstream.headers['content-length'];
-    if (cl) res.setHeader('Content-Length', cl);
-    const cr = upstream.headers['content-range'];
-    if (cr) res.setHeader('Content-Range', cr);
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "*");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Accept-Ranges", "bytes");
+    const ct = upstream.headers["content-type"];
+    if (ct) res.setHeader("Content-Type", ct);
+    const cl = upstream.headers["content-length"];
+    if (cl) res.setHeader("Content-Length", cl);
+    const cr = upstream.headers["content-range"];
+    if (cr) res.setHeader("Content-Range", cr);
     res.status(range ? 206 : upstream.status);
     upstream.data.pipe(res);
   } catch (e) {
@@ -148,6 +157,13 @@ app.options("/api/proxy", (req, res) => {
   res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "*");
   res.sendStatus(204);
+});
+
+// ── SPA fallback — serve index.html for unknown routes ───
+app.get("*", (req, res) => {
+  // Don't catch API routes
+  if (req.path.startsWith("/api/")) return res.status(404).json({ error: "Not found" });
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.listen(PORT, () => console.log("KiroPlayr running on port", PORT));
