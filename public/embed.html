@@ -137,13 +137,11 @@
     return `${API_BASE}/api/proxy?url=${encodeURIComponent(url)}`;
   }
 
-  // Read the raw MP4 URL from the path
-  // Format: /embed/https://ia800409.us.archive.org/.../video.mp4
+  // Read the raw MP4 URL from ?v= query param
+  // Embed URL format: /embed?v=https://ia800409.us.archive.org/.../video.mp4
   function getVideoUrl() {
-    const prefix = '/embed/';
-    const full   = location.pathname + location.search; // include query if URL had one
-    if (!full.startsWith(prefix)) return null;
-    return full.slice(prefix.length);
+    const v = new URLSearchParams(location.search).get('v');
+    return v ? decodeURIComponent(v) : null;
   }
 
   // Get a human-readable title from the filename
