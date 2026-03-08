@@ -4,810 +4,1036 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KiroPlyr — Dashboard</title>
-  <link rel="shortcut icon" href="img/fav-icon.png" type="image/x-icon" />
 
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
-
-  <!-- Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
-  <!-- Vidstack 1.x CDN — must be type="module" -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1.12.12/player/styles/base.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1.12.12/player/styles/default/theme.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1.12.12/player/styles/default/layouts/video.css" />
-  <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack@1.12.12/cdn/prod.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
       --bg:        #09090b;
       --surface:   #0f0f11;
-      --surface-2: #18181b;
+      --card:      #18181b;
       --border:    #27272a;
-      --border-2:  #3f3f46;
-      --muted:     #52525b;
+      --input-bg:  #18181b;
+      --muted:     #71717a;
       --muted-fg:  #a1a1aa;
       --fg:        #fafafa;
-      --fg-2:      #e4e4e7;
-      --accent-fg: #09090b;
+      --accent:    #ffffff;
       --danger:    #ef4444;
-      --danger-bg: rgba(239,68,68,0.10);
-      --ring:      rgba(255,255,255,0.12);
-      --font:      'Outfit', system-ui, sans-serif;
+      --danger-bg: rgba(239,68,68,0.12);
+      --success:   #22c55e;
+      --radius:    0.5rem;
       --sidebar-w: 260px;
-      --nav-h:     57px;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font); -webkit-font-smoothing: antialiased; }
-    ::selection { background: rgba(255,255,255,0.12); }
 
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 10px; }
-
-    /* ── Layout ── */
-    .layout { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-
-    /* ── Topbar ── */
-    .topbar {
-      height: var(--nav-h); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; padding: 0 20px; gap: 14px;
-      background: var(--bg); flex-shrink: 0; z-index: 100;
-    }
-    .topbar-brand {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 1rem; font-weight: 700; color: var(--fg);
-      text-decoration: none; letter-spacing: -0.02em; flex-shrink: 0;
-    }
-    .topbar-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
-    .topbar-title { font-size: 0.875rem; color: var(--muted-fg); font-weight: 400; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .topbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-    .avatar {
-      width: 30px; height: 30px; border-radius: 50%;
-      background: var(--surface-2); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.72rem; font-weight: 600; color: var(--fg-2); flex-shrink: 0;
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: 'Outfit', sans-serif;
+      color: var(--fg);
+      font-size: 14px;
     }
 
-    /* ── Body ── */
-    .body-area { display: flex; flex: 1; overflow: hidden; }
+    /* ===== LAYOUT ===== */
+    .layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-    /* ── Sidebar ── */
+    /* ===== SIDEBAR ===== */
     .sidebar {
-      width: var(--sidebar-w); flex-shrink: 0;
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; overflow: hidden;
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
       background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
+
     .sidebar-header {
-      padding: 14px 14px 10px;
-      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
     }
-    .sidebar-label { font-size: 0.72rem; font-weight: 600; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.06em; }
-    .sidebar-list { flex: 1; overflow-y: auto; padding: 8px 6px; }
+
+    .sidebar-header .brand {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .sidebar-header .brand span { color: var(--muted-fg); font-weight: 400; }
+
+    .sidebar-section {
+      padding: 0.875rem 1rem 0.5rem;
+    }
+
+    .sidebar-section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      padding: 0 0.25rem;
+    }
+
+    /* Folder list */
+    .folder-list {
+      list-style: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 0.75rem;
+    }
+
+    .folder-list::-webkit-scrollbar { width: 4px; }
+    .folder-list::-webkit-scrollbar-track { background: transparent; }
+    .folder-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
     .folder-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 10px; border-radius: 6px; cursor: pointer;
-      font-size: 0.875rem; color: var(--muted-fg);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.625rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      color: var(--muted-fg);
+      font-size: 0.875rem;
       transition: background 0.1s, color 0.1s;
-      user-select: none; border: 1px solid transparent;
-    }
-    .folder-item:hover { background: var(--surface-2); color: var(--fg); }
-    .folder-item.active { background: var(--surface-2); color: var(--fg); border-color: var(--border); }
-    .folder-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .folder-actions { display: none; gap: 2px; flex-shrink: 0; }
-    .folder-item:hover .folder-actions { display: flex; }
-
-    /* ── Content ── */
-    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
-    .content-header {
-      padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-    }
-    .content-header h2 { font-size: 1rem; font-weight: 600; letter-spacing: -0.015em; flex: 1; }
-    .content-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
-
-    /* ── Empty state ── */
-    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 24px; text-align: center; gap: 10px; }
-    .empty-icon { width: 48px; height: 48px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
-    .empty-state h3 { font-size: 0.9375rem; font-weight: 600; }
-    .empty-state p { font-size: 0.8125rem; color: var(--muted-fg); max-width: 260px; line-height: 1.5; }
-
-    /* ── Video grid ── */
-    .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-    .video-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color 0.15s; }
-    .video-card:hover { border-color: var(--border-2); }
-    .video-thumb {
-      aspect-ratio: 16/9; background: var(--surface-2);
-      cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden;
-    }
-    .video-thumb-icon {
-      width: 44px; height: 44px; background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      transition: transform 0.15s, background 0.15s;
-    }
-    .video-thumb:hover .video-thumb-icon { transform: scale(1.08); background: rgba(0,0,0,0.75); }
-    .video-card-body { padding: 14px; }
-    .video-title { font-size: 0.875rem; font-weight: 500; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .video-url-preview { font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 12px; }
-    .video-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-
-    /* ── Buttons ── */
-    .btn-k {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-family: var(--font); font-size: 0.8125rem; font-weight: 500;
-      border-radius: 6px; padding: 7px 12px; border: 1px solid;
-      cursor: pointer; transition: all 0.15s; text-decoration: none; white-space: nowrap;
-    }
-    .btn-k-ghost { background: transparent; border-color: var(--border); color: var(--muted-fg); }
-    .btn-k-ghost:hover { background: var(--surface-2); color: var(--fg); border-color: var(--border-2); }
-    .btn-k-solid { background: var(--fg); border-color: var(--fg); color: var(--accent-fg); }
-    .btn-k-solid:hover { background: #e4e4e7; border-color: #e4e4e7; }
-    .btn-k-danger { background: transparent; border-color: transparent; color: var(--muted); }
-    .btn-k-danger:hover { background: var(--danger-bg); border-color: rgba(239,68,68,0.3); color: var(--danger); }
-    .btn-k-icon { padding: 7px; background: transparent; border-color: var(--border); color: var(--muted-fg); }
-    .btn-k-icon:hover { background: var(--surface-2); color: var(--fg); border-color: var(--border-2); }
-    .btn-k-xs { padding: 4px 8px; font-size: 0.75rem; border-radius: 5px; }
-
-    /* ── Badge ── */
-    .badge-k { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 500; padding: 3px 8px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted-fg); background: var(--surface-2); }
-
-    /* ── Copy toast ── */
-    .copy-toast {
-      position: fixed; bottom: 24px; left: 50%;
-      transform: translateX(-50%) translateY(60px);
-      background: var(--fg); color: var(--accent-fg);
-      font-size: 0.8125rem; font-weight: 500; padding: 10px 18px;
-      border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      z-index: 9999; transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-      pointer-events: none; display: flex; align-items: center; gap: 8px;
-    }
-    .copy-toast.show { transform: translateX(-50%) translateY(0); }
-
-    /* ── Modals ── */
-    .modal-k .modal-content { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; color: var(--fg); font-family: var(--font); }
-    .modal-k .modal-header { border-bottom: 1px solid var(--border); padding: 18px 22px 16px; }
-    .modal-k .modal-title { font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.015em; }
-    .modal-k .btn-close { filter: invert(1); opacity: 0.5; }
-    .modal-k .modal-body { padding: 22px; }
-    .modal-k .modal-footer { border-top: 1px solid var(--border); padding: 14px 22px; gap: 8px; }
-    .modal-backdrop { background: rgba(0,0,0,0.75) !important; backdrop-filter: blur(4px); }
-
-    .mfield-label { font-size: 0.8125rem; font-weight: 500; color: var(--fg-2); margin-bottom: 7px; display: block; }
-    .mfield-input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--fg); font-family: var(--font); font-size: 0.875rem; padding: 9px 12px;
-      outline: none; transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .mfield-input::placeholder { color: var(--muted); }
-    .mfield-input:focus { border-color: var(--border-2); box-shadow: 0 0 0 3px var(--ring); }
-    .mfield-input:hover:not(:focus) { border-color: var(--border-2); }
-    .mfield-hint { font-size: 0.75rem; color: var(--muted-fg); margin-top: 6px; }
-
-    .embed-display {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-      padding: 10px 12px; font-size: 0.75rem; color: var(--muted-fg);
-      word-break: break-all; font-family: 'Courier New', monospace; line-height: 1.5;
+      user-select: none;
     }
 
-    /* ── Player modal ── */
-    .player-modal .modal-content { background: #000; border-color: var(--border); }
-    .player-modal .modal-header { background: var(--surface); border-bottom-color: var(--border); padding: 14px 18px; }
-    .player-modal .modal-body { padding: 0; background: #000; }
+    .folder-item:hover { background: var(--card); color: var(--fg); }
+    .folder-item.active { background: var(--card); color: var(--fg); }
+    .folder-item .folder-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* player container must have explicit height — Vidstack needs it */
-    #previewPlayerWrap {
+    .folder-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.1s; }
+    .folder-item:hover .folder-actions { opacity: 1; }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 3px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      transition: color 0.1s, background 0.1s;
+      line-height: 1;
+    }
+
+    .icon-btn:hover { color: var(--fg); background: rgba(255,255,255,0.08); }
+    .icon-btn.danger:hover { color: var(--danger); }
+
+    /* Add folder */
+    .sidebar-footer {
+      padding: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      height: 56px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .topbar-actions { display: flex; gap: 0.5rem; align-items: center; }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    .content::-webkit-scrollbar { width: 4px; }
+    .content::-webkit-scrollbar-track { background: transparent; }
+    .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      height: 100%;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty-state svg { color: var(--border); margin-bottom: 0.25rem; }
+    .empty-state strong { color: var(--muted-fg); font-size: 0.95rem; }
+    .empty-state span { font-size: 0.82rem; }
+
+    /* ===== VIDEO GRID ===== */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .video-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .video-card:hover { border-color: #3f3f46; }
+
+    .video-card-body { padding: 1rem; }
+
+    .video-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .video-url-text {
+      font-size: 0.75rem;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: 0.875rem;
+    }
+
+    .video-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .link-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .link-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      min-width: 48px;
+    }
+
+    .link-copy-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      color: var(--muted-fg);
+      font-family: 'Consolas', monospace;
+      font-size: 0.72rem;
+      padding: 0.3rem 0.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      min-width: 0;
+      outline: none;
+      transition: border-color 0.1s;
+    }
+
+    .link-copy-input:focus { border-color: #52525b; }
+
+    .video-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.625rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.45rem 0.875rem;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background 0.12s, color 0.12s, transform 0.08s;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-default {
+      background: var(--card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+
+    .btn-default:hover:not(:disabled) { background: #27272a; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #09090b;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover:not(:disabled) { background: #e4e4e7; }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+
+    .btn-danger:hover:not(:disabled) { background: rgba(239,68,68,0.2); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted-fg);
+      border: 1px solid transparent;
+    }
+
+    .btn-ghost:hover { background: var(--card); color: var(--fg); border-color: var(--border); }
+
+    .btn-sm {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.6rem;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(3px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.625rem;
       width: 100%;
-      aspect-ratio: 16/9;
-      background: #000;
-      position: relative;
+      max-width: 440px;
+      transform: translateY(8px);
+      transition: transform 0.15s;
     }
 
-    /* Vidstack player fills its container */
-    media-player { width: 100%; height: 100%; --media-font-family: var(--font); }
+    .modal-overlay.open .modal { transform: translateY(0); }
 
-    /* Spinner overlay inside player modal while loading */
-    #playerSpinner {
-      position: absolute; inset: 0; z-index: 5;
-      display: flex; align-items: center; justify-content: center;
-      background: #000; transition: opacity 0.3s;
+    .modal-header {
+      padding: 1.25rem 1.5rem 0;
     }
-    #playerSpinner.hide { opacity: 0; pointer-events: none; }
-    .p-ring {
-      width: 34px; height: 34px; border-radius: 50%;
-      border: 3px solid rgba(255,255,255,0.08);
-      border-top-color: rgba(255,255,255,0.7);
-      animation: spin 0.7s linear infinite;
+
+    .modal-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.25rem;
     }
+
+    .modal-header p {
+      font-size: 0.82rem;
+      color: var(--muted-fg);
+    }
+
+    .modal-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted-fg);
+      margin-bottom: 0.35rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 0.875rem;
+      padding: 0.55rem 0.75rem;
+      outline: none;
+      transition: border-color 0.12s;
+      resize: none;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: #52525b; }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: #52525b;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
+    }
+
+    .modal-footer {
+      padding: 0 1.5rem 1.25rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    /* ===== TOAST ===== */
+    #toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 9999;
+    }
+
+    .toast {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.65rem 1rem;
+      font-size: 0.82rem;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      animation: toast-in 0.2s ease;
+      min-width: 220px;
+      max-width: 320px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .toast.success { border-left: 3px solid var(--success); }
+    .toast.error   { border-left: 3px solid var(--danger); }
+
+    @keyframes toast-in { from { opacity: 0; transform: translateX(12px); } }
+    @keyframes toast-out { to   { opacity: 0; transform: translateX(12px); } }
+
+    /* ===== BADGE ===== */
+    .badge {
+      font-size: 0.68rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 999px;
+      background: var(--border);
+      color: var(--muted-fg);
+      font-weight: 500;
+    }
+
+    /* ===== LOGOUT ===== */
+    .sidebar-user {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+
+    .avatar {
+      width: 28px;
+      height: 28px;
+      background: #27272a;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted-fg);
+      flex-shrink: 0;
+    }
+
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 0.82rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-role { font-size: 0.7rem; color: var(--muted); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 640px) {
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        bottom: 0;
+        z-index: 500;
+        transition: left 0.2s;
+      }
+
+      .sidebar.open { left: 0; }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 499;
+      }
+
+      .sidebar-overlay.open { display: block; }
+
+      .menu-toggle {
+        display: flex !important;
+      }
+    }
+
+    .menu-toggle { display: none; }
+
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Skeleton ── */
-    .skeleton {
-      background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
-      background-size: 200% 100%; animation: shimmer 1.4s ease infinite; border-radius: 5px;
-    }
-    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    .skel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-    .skel-thumb { aspect-ratio: 16/9; }
-    .skel-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
-
-    /* ── Mobile ── */
-    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; }
-
-    @media (max-width: 767px) {
-      .sidebar { position: fixed; left: 0; top: var(--nav-h); bottom: 0; z-index: 60; transform: translateX(-100%); transition: transform 0.25s ease; }
-      .sidebar.open { transform: translateX(0); }
-      .sidebar-overlay.show { display: block; }
-      .content-header { padding: 14px 16px 12px; }
-      .content-body { padding: 14px 16px; }
-      .video-grid { grid-template-columns: 1fr; }
-    }
+    .spinner { width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.2); border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
+    .spinner-white { border: 2px solid rgba(255,255,255,0.15); border-top-color: #fff; }
   </style>
 </head>
 <body>
+
+<!-- Mobile sidebar overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
 <div class="layout">
 
-  <!-- Topbar -->
-  <header class="topbar">
-    <button class="btn-k btn-k-icon d-md-none" id="menuToggle" style="border:none;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-    <a href="index.html" class="topbar-brand">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="white"/><path d="M9.5 7.5L17 12L9.5 16.5V7.5Z" fill="#09090b"/></svg>
-      KiroPlyr
-    </a>
-    <span class="topbar-sep d-none d-md-block"></span>
-    <span class="topbar-title d-none d-md-block" id="topTitle">Dashboard</span>
-    <div class="topbar-right">
-      <span class="badge-k" id="userBadge">Admin</span>
-      <div class="avatar" id="userAvatar">K</div>
-      <button class="btn-k btn-k-ghost btn-k-xs" id="logoutBtn">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        <span class="d-none d-sm-inline">Logout</span>
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-header">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span class="brand">Kiro<span>Plyr</span></span>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Folders</div>
+    </div>
+
+    <ul class="folder-list" id="folderList">
+      <li style="padding: 0.5rem 0.25rem; color: var(--muted); font-size:0.8rem;">Loading…</li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <button class="btn btn-default" style="width:100%;" onclick="openModal('folderModal')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Folder
       </button>
     </div>
-  </header>
 
-  <div class="body-area">
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar-user">
+      <div class="avatar" id="avatarEl">?</div>
+      <div class="user-info">
+        <div class="user-name" id="userNameEl">—</div>
+        <div class="user-role">Admin</div>
+      </div>
+      <button class="icon-btn danger" title="Sign out" onclick="signOut()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <span class="sidebar-label">Folders</span>
-        <button class="btn-k btn-k-icon btn-k-xs" id="newFolderBtn" title="New Folder">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main">
+
+    <div class="topbar">
+      <button class="icon-btn menu-toggle" id="menuToggle" onclick="openSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="topbar-title" id="topbarTitle">Select a folder</span>
+      <div class="topbar-actions">
+        <span class="badge" id="videoCount" style="display:none"></span>
+        <button class="btn btn-primary" id="addVideoBtn" style="display:none;" onclick="openModal('videoModal')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Video
         </button>
       </div>
-      <div class="sidebar-list" id="folderList">
-        <div style="padding:12px 10px;display:flex;flex-direction:column;gap:6px;">
-          <div class="skeleton" style="height:32px;border-radius:6px;"></div>
-          <div class="skeleton" style="height:32px;border-radius:6px;"></div>
-          <div class="skeleton" style="height:32px;border-radius:6px;"></div>
-        </div>
-      </div>
-    </aside>
+    </div>
 
-    <!-- Content -->
-    <main class="content">
-      <div class="content-header">
-        <h2 id="contentTitle">Select a folder</h2>
-        <div id="headerActions" style="display:none;">
-          <button class="btn-k btn-k-solid" id="addVideoBtn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Video
-          </button>
-        </div>
+    <div class="content" id="mainContent">
+      <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <strong>No folder selected</strong>
+        <span>Pick a folder from the sidebar, or create a new one.</span>
       </div>
-      <div class="content-body">
-        <div class="empty-state" id="noFolderState">
-          <div class="empty-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--muted-fg)"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-          </div>
-          <h3>No folder selected</h3>
-          <p>Create a folder from the sidebar to start organizing your videos.</p>
-        </div>
-        <div class="video-grid" id="videoGrid" style="display:none;"></div>
-      </div>
-    </main>
+    </div>
+
   </div>
 </div>
 
-<!-- Copy Toast -->
-<div class="copy-toast" id="copyToast">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-  Copied!
-</div>
+<!-- ===== MODALS ===== -->
 
 <!-- Folder Modal -->
-<div class="modal fade modal-k" id="folderModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="folderModalTitle">New Folder</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-overlay" id="folderModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="folderModalTitle">New Folder</h2>
+      <p>Organize your videos into folders.</p>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Folder name</label>
+        <input type="text" id="folderNameInput" placeholder="e.g. Anime, Movies…" />
       </div>
-      <div class="modal-body">
-        <label class="mfield-label" for="folderName">Folder Name</label>
-        <input type="text" class="mfield-input" id="folderName" placeholder="e.g. Anime Season 1" />
-      </div>
-      <div class="modal-footer">
-        <button class="btn-k btn-k-ghost" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn-k btn-k-solid" id="saveFolderBtn">Save</button>
-      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('folderModal')">Cancel</button>
+      <button class="btn btn-primary" id="folderSaveBtn" onclick="saveFolder()">Create</button>
     </div>
   </div>
 </div>
 
 <!-- Video Modal -->
-<div class="modal fade modal-k" id="videoModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered" style="max-width:500px;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="videoModalTitle">Add Video</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-overlay" id="videoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="videoModalTitle">Add Video</h2>
+      <p>Paste a direct video URL (e.g. archive.org .mp4 link).</p>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Video title</label>
+        <input type="text" id="videoTitleInput" placeholder="Enter title…" />
       </div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;">
-        <div>
-          <label class="mfield-label" for="videoTitle">Title</label>
-          <input type="text" class="mfield-input" id="videoTitle" placeholder="e.g. Hunter x Hunter Ep. 001" />
-        </div>
-        <div>
-          <label class="mfield-label" for="videoUrl">MP4 URL (archive.org or direct link)</label>
-          <input type="url" class="mfield-input" id="videoUrl" placeholder="https://ia800409.us.archive.org/...mp4" />
-          <p class="mfield-hint">Paste a direct .mp4 link. It will be saved to the database and played via the CORS proxy.</p>
-        </div>
-        <!-- Embed URL shown after save -->
-        <div id="embedPreviewSection" style="display:none;">
-          <label class="mfield-label">Embed URL</label>
-          <div class="embed-display" id="embedUrlDisplay">—</div>
-          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="btn-k btn-k-ghost btn-k-xs" id="copyEmbedInModal">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-              Copy Embed URL
-            </button>
-            <a class="btn-k btn-k-ghost btn-k-xs" id="openEmbedInModal" href="#" target="_blank">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              Open Embed
-            </a>
-          </div>
-        </div>
+      <div class="form-group">
+        <label>Video URL</label>
+        <input type="text" id="videoUrlInput" placeholder="https://ia…archive.org/…/video.mp4" />
       </div>
-      <div class="modal-footer">
-        <button class="btn-k btn-k-ghost" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn-k btn-k-solid" id="saveVideoBtn">
-          <span id="saveBtnText">Save Video</span>
-          <span id="saveBtnSpinner" style="display:none;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.7s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
-          </span>
-        </button>
-      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('videoModal')">Cancel</button>
+      <button class="btn btn-primary" id="videoSaveBtn" onclick="saveVideo()">Add Video</button>
     </div>
   </div>
 </div>
 
-<!-- Delete Modal -->
-<div class="modal fade modal-k" id="deleteModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Confirm Delete</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:0.875rem;color:var(--fg-2);line-height:1.6;" id="deleteMsg">Are you sure?</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-k btn-k-ghost" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn-k" id="confirmDeleteBtn" style="background:var(--danger);border-color:var(--danger);color:#fff;">Delete</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Toast container -->
+<div id="toast-container"></div>
 
-<!-- Player Preview Modal -->
-<div class="modal fade modal-k player-modal" id="playerModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="playerTitle">Preview</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div id="previewPlayerWrap">
-          <!-- Spinner shown while player initializes -->
-          <div id="playerSpinner"><div class="p-ring"></div></div>
-
-          <!-- Vidstack player — src set via JS AFTER modal is fully visible -->
-          <media-player
-            id="kiroMediaPlayer"
-            view-type="video"
-            stream-type="on-demand"
-            log-level="warn"
-            crossorigin
-            playsinline
-          >
-            <media-provider></media-provider>
-            <media-video-layout></media-video-layout>
-          </media-player>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script>
-// ── Constants ────────────────────────────────────────────
-const API      = 'https://kiroplyr.onrender.com';
-const token    = localStorage.getItem('kiro_token');
-const username = localStorage.getItem('kiro_username') || 'Admin';
+  // ====================================================
+  // CONFIG
+  // ====================================================
+  const API = 'https://kiroplyr.onrender.com';
 
-// ── Auth guard ───────────────────────────────────────────
-if (!token) location.href = 'signin.html';
+  // ====================================================
+  // AUTH CHECK
+  // ====================================================
+  const token = localStorage.getItem('kiro_token') || sessionStorage.getItem('kiro_token');
+  const username = localStorage.getItem('kiro_username') || sessionStorage.getItem('kiro_username') || 'Admin';
 
-document.getElementById('userAvatar').textContent = username.charAt(0).toUpperCase();
-document.getElementById('userBadge').textContent  = username;
-
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  ['kiro_token','kiro_username','kiro_role'].forEach(k => localStorage.removeItem(k));
-  location.href = 'signin.html';
-});
-
-// ── API helper ───────────────────────────────────────────
-async function api(method, path, body) {
-  const res = await fetch(API + path, {
-    method,
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (res.status === 401) { location.href = 'signin.html'; return null; }
-  return res.json();
-}
-
-function proxyUrl(url) {
-  return `${API}/api/proxy?url=${encodeURIComponent(url)}`;
-}
-
-// ── Copy toast ───────────────────────────────────────────
-let toastTimer;
-function copyText(text) {
-  navigator.clipboard.writeText(text).catch(() => {
-    const ta = Object.assign(document.createElement('textarea'), { value: text });
-    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
-  });
-  const toast = document.getElementById('copyToast');
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
-}
-
-// ── Mobile sidebar ───────────────────────────────────────
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-document.getElementById('menuToggle').addEventListener('click', () => {
-  sidebar.classList.toggle('open'); overlay.classList.toggle('show');
-});
-overlay.addEventListener('click', () => {
-  sidebar.classList.remove('open'); overlay.classList.remove('show');
-});
-
-// ── State ────────────────────────────────────────────────
-let folders = [], videos = [];
-let activeFolderId = null, editFolderId = null, editVideoId = null;
-let deleteType = null, deleteId = null;
-
-// ── Bootstrap modals ─────────────────────────────────────
-const folderModal = new bootstrap.Modal('#folderModal');
-const videoModal  = new bootstrap.Modal('#videoModal');
-const deleteModal = new bootstrap.Modal('#deleteModal');
-const playerModal = new bootstrap.Modal('#playerModal');
-
-// ── Folders ──────────────────────────────────────────────
-async function loadFolders() {
-  const data = await api('GET', '/api/folders');
-  if (!data) return;
-  folders = data.data || [];
-  renderFolders();
-}
-
-function renderFolders() {
-  const list = document.getElementById('folderList');
-  if (!folders.length) {
-    list.innerHTML = `<div style="padding:20px 10px;text-align:center;"><p style="font-size:0.78rem;color:var(--muted-fg);line-height:1.5;">No folders yet.<br>Click + to create one.</p></div>`;
-    return;
+  if (!token) {
+    window.location.replace('signin.html');
   }
-  list.innerHTML = folders.map(f => `
-    <div class="folder-item ${f._id === activeFolderId ? 'active' : ''}" data-id="${f._id}">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="flex-shrink:0;color:var(--muted-fg)"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-      <span class="folder-name">${escHtml(f.name)}</span>
-      <div class="folder-actions">
-        <button class="btn-k btn-k-icon btn-k-xs edit-folder" data-id="${f._id}" style="border:none;padding:3px 5px;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="btn-k btn-k-danger btn-k-xs del-folder" data-id="${f._id}" style="border:none;padding:3px 5px;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-        </button>
-      </div>
-    </div>
-  `).join('');
 
-  list.querySelectorAll('.folder-item').forEach(el => {
-    el.addEventListener('click', e => {
-      if (e.target.closest('.folder-actions')) return;
-      selectFolder(el.dataset.id);
-      sidebar.classList.remove('open'); overlay.classList.remove('show');
+  // Show user info
+  const userEl = document.getElementById('userNameEl');
+  const avatarEl = document.getElementById('avatarEl');
+  userEl.textContent = username;
+  avatarEl.textContent = username.charAt(0).toUpperCase();
+
+  function signOut() {
+    localStorage.removeItem('kiro_token');
+    localStorage.removeItem('kiro_username');
+    sessionStorage.removeItem('kiro_token');
+    sessionStorage.removeItem('kiro_username');
+    window.location.replace('signin.html');
+  }
+
+  // ====================================================
+  // API HELPERS
+  // ====================================================
+  async function api(method, path, body) {
+    const opts = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+    return json.data;
+  }
+
+  // ====================================================
+  // STATE
+  // ====================================================
+  let folders = [];
+  let activeFolderId = null;
+  let editingFolderId = null;
+  let editingVideoId = null;
+  let videos = [];
+
+  // ====================================================
+  // SIDEBAR MOBILE
+  // ====================================================
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebarOverlay').classList.add('open');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+  }
+
+  // ====================================================
+  // MODAL HELPERS
+  // ====================================================
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    // Reset editing state
+    if (id === 'folderModal') {
+      editingFolderId = null;
+      document.getElementById('folderNameInput').value = '';
+      document.getElementById('folderModalTitle').textContent = 'New Folder';
+      document.getElementById('folderSaveBtn').textContent = 'Create';
+    }
+    if (id === 'videoModal') {
+      editingVideoId = null;
+      document.getElementById('videoTitleInput').value = '';
+      document.getElementById('videoUrlInput').value = '';
+      document.getElementById('videoModalTitle').textContent = 'Add Video';
+      document.getElementById('videoSaveBtn').textContent = 'Add Video';
+    }
+  }
+
+  // Close modal on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target === el) closeModal(el.id);
     });
   });
-  list.querySelectorAll('.edit-folder').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); openFolderModal(btn.dataset.id); }));
-  list.querySelectorAll('.del-folder').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); openDeleteModal('folder', btn.dataset.id); }));
-}
 
-function selectFolder(id) {
-  activeFolderId = id;
-  const folder = folders.find(f => f._id === id);
-  const name = folder?.name || 'Videos';
-  document.getElementById('contentTitle').textContent = name;
-  document.getElementById('topTitle').textContent = name;
-  document.getElementById('headerActions').style.display = '';
-  document.getElementById('noFolderState').style.display = 'none';
-  document.getElementById('videoGrid').style.display = '';
-  renderFolders();
-  loadVideos(id);
-}
-
-document.getElementById('newFolderBtn').addEventListener('click', () => openFolderModal(null));
-
-function openFolderModal(id) {
-  editFolderId = id;
-  const f = id ? folders.find(x => x._id === id) : null;
-  document.getElementById('folderModalTitle').textContent = id ? 'Rename Folder' : 'New Folder';
-  document.getElementById('folderName').value = f?.name || '';
-  folderModal.show();
-  setTimeout(() => document.getElementById('folderName').focus(), 300);
-}
-
-document.getElementById('saveFolderBtn').addEventListener('click', async () => {
-  const name = document.getElementById('folderName').value.trim();
-  if (!name) return;
-  await api(editFolderId ? 'PATCH' : 'POST', editFolderId ? `/api/folders/${editFolderId}` : '/api/folders', { name });
-  folderModal.hide();
-  await loadFolders();
-  if (!editFolderId) {
-    const fresh = await api('GET', '/api/folders');
-    if (fresh?.data?.length) selectFolder(fresh.data[0]._id);
+  // ====================================================
+  // TOAST
+  // ====================================================
+  function toast(msg, type = 'success') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = type === 'success'
+      ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>${msg}`
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${msg}`;
+    const container = document.getElementById('toast-container');
+    container.appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'toast-out 0.2s ease forwards';
+      el.addEventListener('animationend', () => el.remove());
+    }, 3000);
   }
-});
-document.getElementById('folderName').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('saveFolderBtn').click(); });
 
-// ── Videos ───────────────────────────────────────────────
-async function loadVideos(folderId) {
-  renderVideoSkeletons();
-  const data = await api('GET', `/api/videos/folder/${folderId}`);
-  if (!data) return;
-  videos = data.data || [];
-  renderVideos();
-}
+  // ====================================================
+  // FOLDERS
+  // ====================================================
+  async function loadFolders() {
+    try {
+      folders = await api('GET', '/api/folders');
+      renderFolders();
+    } catch (e) {
+      toast('Failed to load folders: ' + e.message, 'error');
+    }
+  }
 
-function renderVideoSkeletons() {
-  document.getElementById('videoGrid').innerHTML = Array(4).fill(0).map(() => `
-    <div class="skel-card">
-      <div class="skel-thumb skeleton"></div>
-      <div class="skel-body">
-        <div class="skeleton" style="height:14px;width:70%;"></div>
-        <div class="skeleton" style="height:11px;width:50%;"></div>
-        <div style="display:flex;gap:6px;margin-top:4px;">
-          <div class="skeleton" style="height:28px;width:90px;border-radius:6px;"></div>
-          <div class="skeleton" style="height:28px;width:60px;border-radius:6px;"></div>
+  function renderFolders() {
+    const list = document.getElementById('folderList');
+    if (!folders.length) {
+      list.innerHTML = '<li style="padding:0.5rem 0.25rem; color:var(--muted); font-size:0.8rem;">No folders yet.</li>';
+      return;
+    }
+    list.innerHTML = folders.map(f => `
+      <li class="folder-item ${f._id === activeFolderId ? 'active' : ''}" onclick="selectFolder('${f._id}', '${escHtml(f.name)}')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span class="folder-name" title="${escHtml(f.name)}">${escHtml(f.name)}</span>
+        <div class="folder-actions">
+          <button class="icon-btn" title="Rename" onclick="event.stopPropagation(); editFolder('${f._id}', '${escHtml(f.name)}')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="icon-btn danger" title="Delete" onclick="event.stopPropagation(); deleteFolder('${f._id}')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </button>
         </div>
-      </div>
-    </div>`).join('');
-}
+      </li>
+    `).join('');
+  }
 
-function renderVideos() {
-  const grid = document.getElementById('videoGrid');
-  if (!videos.length) {
-    grid.innerHTML = `
-      <div class="empty-state" style="grid-column:1/-1;">
-        <div class="empty-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--muted-fg)"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
-        <h3>No videos yet</h3>
-        <p>Click "Add Video" to add the first video to this folder.</p>
+  function selectFolder(id, name) {
+    activeFolderId = id;
+    document.getElementById('topbarTitle').textContent = name;
+    document.getElementById('addVideoBtn').style.display = '';
+    renderFolders();
+    loadVideos(id);
+    closeSidebar();
+  }
+
+  function editFolder(id, name) {
+    editingFolderId = id;
+    document.getElementById('folderNameInput').value = name;
+    document.getElementById('folderModalTitle').textContent = 'Rename Folder';
+    document.getElementById('folderSaveBtn').textContent = 'Save';
+    openModal('folderModal');
+  }
+
+  async function saveFolder() {
+    const name = document.getElementById('folderNameInput').value.trim();
+    if (!name) return;
+    const btn = document.getElementById('folderSaveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+    try {
+      if (editingFolderId) {
+        await api('PATCH', `/api/folders/${editingFolderId}`, { name });
+        toast('Folder renamed.');
+      } else {
+        await api('POST', '/api/folders', { name });
+        toast('Folder created.');
+      }
+      closeModal('folderModal');
+      await loadFolders();
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = editingFolderId ? 'Save' : 'Create';
+    }
+  }
+
+  async function deleteFolder(id) {
+    if (!confirm('Delete this folder? All videos inside will also be deleted.')) return;
+    try {
+      await api('DELETE', `/api/folders/${id}`);
+      if (activeFolderId === id) {
+        activeFolderId = null;
+        document.getElementById('topbarTitle').textContent = 'Select a folder';
+        document.getElementById('addVideoBtn').style.display = 'none';
+        document.getElementById('videoCount').style.display = 'none';
+        renderEmptyMain('No folder selected', 'Pick a folder from the sidebar, or create a new one.');
+      }
+      toast('Folder deleted.');
+      await loadFolders();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  // Enter key for folder modal
+  document.getElementById('folderNameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveFolder();
+  });
+
+  // ====================================================
+  // VIDEOS
+  // ====================================================
+  async function loadVideos(folderId) {
+    const content = document.getElementById('mainContent');
+    content.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;gap:0.75rem;color:var(--muted)"><span class="spinner spinner-white"></span> Loading videos…</div>`;
+    try {
+      videos = await api('GET', `/api/videos/folder/${folderId}`);
+      renderVideos();
+    } catch (e) {
+      toast('Failed to load videos: ' + e.message, 'error');
+      renderEmptyMain('Error loading videos', e.message);
+    }
+  }
+
+  function renderVideos() {
+    const count = document.getElementById('videoCount');
+    count.textContent = videos.length + ' video' + (videos.length !== 1 ? 's' : '');
+    count.style.display = videos.length ? '' : 'none';
+
+    if (!videos.length) {
+      renderEmptyMain('No videos yet', 'Click "Add Video" to upload your first video link.');
+      return;
+    }
+
+    const embedBase = `${API}/embed/`;
+    const proxyBase = `${API}/api/proxy?url=`;
+
+    document.getElementById('mainContent').innerHTML = `
+      <div class="video-grid">
+        ${videos.map(v => {
+          const embedUrl  = embedBase + v._id;
+          const proxyUrl  = proxyBase + encodeURIComponent(v.url);
+          return `
+          <div class="video-card" id="vc-${v._id}">
+            <div class="video-card-body">
+              <div class="video-title" title="${escHtml(v.title)}">${escHtml(v.title)}</div>
+              <div class="video-url-text">${escHtml(v.url)}</div>
+              <div class="video-links">
+                <div class="link-row">
+                  <span class="link-label">Embed</span>
+                  <input class="link-copy-input" readonly value="${escHtml(embedUrl)}" onclick="copyInput(this)" title="Click to copy embed URL" />
+                  <button class="btn btn-default btn-sm" onclick="copyText('${escHtml(embedUrl)}')">Copy</button>
+                </div>
+                <div class="link-row">
+                  <span class="link-label">Direct</span>
+                  <input class="link-copy-input" readonly value="${escHtml(proxyUrl)}" onclick="copyInput(this)" title="Click to copy proxy URL" />
+                  <button class="btn btn-default btn-sm" onclick="copyText('${escHtml(proxyUrl)}')">Copy</button>
+                </div>
+              </div>
+            </div>
+            <div class="video-card-footer">
+              <button class="btn btn-default btn-sm" onclick="window.open('${escHtml(embedUrl)}', '_blank')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Watch
+              </button>
+              <div style="display:flex;gap:0.35rem;">
+                <button class="btn btn-ghost btn-sm" onclick="editVideo('${v._id}', '${escHtml(v.title)}', '${escHtml(v.url)}')">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteVideo('${v._id}')">Delete</button>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function renderEmptyMain(title, subtitle) {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+        <strong>${escHtml(title)}</strong>
+        <span>${escHtml(subtitle)}</span>
       </div>`;
-    return;
   }
 
-  grid.innerHTML = videos.map(v => `
-    <div class="video-card">
-      <div class="video-thumb" data-url="${escAttr(v.url)}" data-title="${escAttr(v.title)}">
-        <div class="video-thumb-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        </div>
-      </div>
-      <div class="video-card-body">
-        <div class="video-title" title="${escAttr(v.title)}">${escHtml(v.title)}</div>
-        <div class="video-url-preview" title="${escAttr(v.url)}">${escHtml(v.url)}</div>
-        <div class="video-actions">
-          <button class="btn-k btn-k-ghost btn-k-xs copy-embed" data-url="${escAttr(v.embedUrl)}">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-            Copy Embed
-          </button>
-          <a class="btn-k btn-k-ghost btn-k-xs" href="${escAttr(v.embedUrl)}" target="_blank">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            Embed
-          </a>
-          <button class="btn-k btn-k-ghost btn-k-xs edit-video" data-id="${v._id}">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit
-          </button>
-          <button class="btn-k btn-k-danger btn-k-xs del-video" data-id="${v._id}">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-
-  grid.querySelectorAll('.video-thumb').forEach(el =>
-    el.addEventListener('click', () => openPlayer(el.dataset.url, el.dataset.title)));
-  grid.querySelectorAll('.copy-embed').forEach(btn =>
-    btn.addEventListener('click', () => copyText(btn.dataset.url)));
-  grid.querySelectorAll('.edit-video').forEach(btn =>
-    btn.addEventListener('click', () => openVideoModal(btn.dataset.id)));
-  grid.querySelectorAll('.del-video').forEach(btn =>
-    btn.addEventListener('click', () => openDeleteModal('video', btn.dataset.id)));
-}
-
-// ── Add / Edit video ──────────────────────────────────────
-document.getElementById('addVideoBtn').addEventListener('click', () => openVideoModal(null));
-
-function openVideoModal(id) {
-  editVideoId = id;
-  const v = id ? videos.find(x => x._id === id) : null;
-  document.getElementById('videoModalTitle').textContent = id ? 'Edit Video' : 'Add Video';
-  document.getElementById('videoTitle').value = v?.title || '';
-  document.getElementById('videoUrl').value   = v?.url   || '';
-  document.getElementById('saveBtnText').textContent = id ? 'Save Changes' : 'Save Video';
-  if (v?.embedUrl) {
-    document.getElementById('embedUrlDisplay').textContent = v.embedUrl;
-    document.getElementById('openEmbedInModal').href = v.embedUrl;
-    document.getElementById('embedPreviewSection').style.display = '';
-  } else {
-    document.getElementById('embedPreviewSection').style.display = 'none';
-  }
-  videoModal.show();
-  setTimeout(() => document.getElementById('videoTitle').focus(), 300);
-}
-
-document.getElementById('copyEmbedInModal').addEventListener('click', () => {
-  const url = document.getElementById('embedUrlDisplay').textContent;
-  if (url && url !== '—') copyText(url);
-});
-
-document.getElementById('saveVideoBtn').addEventListener('click', async () => {
-  const title = document.getElementById('videoTitle').value.trim();
-  const url   = document.getElementById('videoUrl').value.trim();
-  if (!title || !url) {
-    document.getElementById('videoTitle').focus();
-    return;
+  function editVideo(id, title, url) {
+    editingVideoId = id;
+    document.getElementById('videoTitleInput').value = title;
+    document.getElementById('videoUrlInput').value = url;
+    document.getElementById('videoModalTitle').textContent = 'Edit Video';
+    document.getElementById('videoSaveBtn').textContent = 'Save Changes';
+    openModal('videoModal');
   }
 
-  // Show spinner
-  document.getElementById('saveBtnText').style.display = 'none';
-  document.getElementById('saveBtnSpinner').style.display = '';
-  document.getElementById('saveVideoBtn').disabled = true;
+  async function saveVideo() {
+    const title = document.getElementById('videoTitleInput').value.trim();
+    const url   = document.getElementById('videoUrlInput').value.trim();
+    if (!title || !url) { toast('Please fill in all fields.', 'error'); return; }
 
-  try {
-    // Save the raw MP4 URL to the database
-    const result = editVideoId
-      ? await api('PATCH', `/api/videos/${editVideoId}`, { title, url })
-      : await api('POST',  '/api/videos', { folderId: activeFolderId, title, url });
+    const btn = document.getElementById('videoSaveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
 
-    videoModal.hide();
-
-    // Auto-copy embed URL after save
-    if (result?.data?.embedUrl) {
-      copyText(result.data.embedUrl);
+    try {
+      if (editingVideoId) {
+        await api('PATCH', `/api/videos/${editingVideoId}`, { title, url });
+        toast('Video updated.');
+      } else {
+        await api('POST', '/api/videos', { folderId: activeFolderId, title, url });
+        toast('Video added.');
+      }
+      closeModal('videoModal');
+      await loadVideos(activeFolderId);
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = editingVideoId ? 'Save Changes' : 'Add Video';
     }
-
-    await loadVideos(activeFolderId);
-  } finally {
-    document.getElementById('saveBtnText').style.display = '';
-    document.getElementById('saveBtnSpinner').style.display = 'none';
-    document.getElementById('saveVideoBtn').disabled = false;
   }
-});
 
-// ── Delete ────────────────────────────────────────────────
-function openDeleteModal(type, id) {
-  deleteType = type; deleteId = id;
-  if (type === 'folder') {
-    const f = folders.find(x => x._id === id);
-    document.getElementById('deleteMsg').innerHTML = `Delete folder <strong>"${escHtml(f?.name)}"</strong>? All its videos will also be deleted.`;
-  } else {
-    const v = videos.find(x => x._id === id);
-    document.getElementById('deleteMsg').innerHTML = `Delete <strong>"${escHtml(v?.title)}"</strong>? This cannot be undone.`;
-  }
-  deleteModal.show();
-}
-
-document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
-  if (deleteType === 'folder') {
-    await api('DELETE', `/api/folders/${deleteId}`);
-    if (activeFolderId === deleteId) {
-      activeFolderId = null;
-      document.getElementById('contentTitle').textContent = 'Select a folder';
-      document.getElementById('topTitle').textContent = 'Dashboard';
-      document.getElementById('headerActions').style.display = 'none';
-      document.getElementById('noFolderState').style.display = '';
-      document.getElementById('videoGrid').style.display = 'none';
+  async function deleteVideo(id) {
+    if (!confirm('Delete this video?')) return;
+    try {
+      await api('DELETE', `/api/videos/${id}`);
+      toast('Video deleted.');
+      await loadVideos(activeFolderId);
+    } catch (e) {
+      toast(e.message, 'error');
     }
-    deleteModal.hide();
-    await loadFolders();
-  } else {
-    await api('DELETE', `/api/videos/${deleteId}`);
-    deleteModal.hide();
-    await loadVideos(activeFolderId);
   }
-});
 
-// ── Player preview ────────────────────────────────────────
-// Store pending video so we can set src AFTER modal is fully visible
-let pendingUrl = null, pendingTitle = null;
+  // Enter key for video modal
+  document.getElementById('videoUrlInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveVideo();
+  });
 
-function openPlayer(rawUrl, title) {
-  pendingUrl   = rawUrl;
-  pendingTitle = title || 'Preview';
-  document.getElementById('playerTitle').textContent = pendingTitle;
-  // Show spinner while waiting for modal to open
-  document.getElementById('playerSpinner').classList.remove('hide');
-  playerModal.show();
-}
+  // ====================================================
+  // CLIPBOARD
+  // ====================================================
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard!')).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      toast('Copied!');
+    });
+  }
 
-// KEY FIX: set src only AFTER Bootstrap finishes showing the modal.
-// Vidstack cannot initialize on a display:none element.
-document.getElementById('playerModal').addEventListener('shown.bs.modal', async () => {
-  if (!pendingUrl) return;
+  function copyInput(el) {
+    el.select();
+    copyText(el.value);
+  }
 
-  const player  = document.getElementById('kiroMediaPlayer');
-  const spinner = document.getElementById('playerSpinner');
+  // ====================================================
+  // UTILS
+  // ====================================================
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
-  // Wait for Vidstack custom elements to be defined (first load only)
-  await customElements.whenDefined('media-player');
-
-  // Set the proxied src — Vidstack reacts to src attribute changes
-  player.setAttribute('src', proxyUrl(pendingUrl));
-  if (pendingTitle) player.setAttribute('title', pendingTitle);
-
-  // Hide spinner when player signals it's ready
-  const hideSpinner = () => spinner.classList.add('hide');
-  player.addEventListener('can-play',        hideSpinner, { once: true });
-  player.addEventListener('playing',         hideSpinner, { once: true });
-  player.addEventListener('loaded-metadata', hideSpinner, { once: true });
-  // Fallback
-  setTimeout(hideSpinner, 8000);
-});
-
-// Stop playback and clear src when modal closes
-document.getElementById('playerModal').addEventListener('hide.bs.modal', () => {
-  const player = document.getElementById('kiroMediaPlayer');
-  player.removeAttribute('src');
-  player.removeAttribute('title');
-  document.getElementById('playerSpinner').classList.remove('hide');
-  pendingUrl = null; pendingTitle = null;
-});
-
-// ── Utils ─────────────────────────────────────────────────
-function escHtml(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(s)  { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-
-// ── Init ──────────────────────────────────────────────────
-loadFolders();
+  // ====================================================
+  // INIT
+  // ====================================================
+  loadFolders();
 </script>
+
 </body>
 </html>
