@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json());
 app.use(cors({ origin: "*", credentials: true }));
 
-// Serve public HTML files (embed.html, signin.html, index.html)
+// Serve public HTML files (vid.html, signin.html, index.html)
 app.use(express.static(path.join(__dirname, "public")));
 
 const MONGO_URI =
@@ -85,29 +85,29 @@ app.delete("/api/folders/:id", authMiddleware, async (req, res) => {
 });
 
 // ── Video routes ─────────────────────────────────────────
-function makeLinks(req, id) {
+function makeLinks(req, id, rawUrl) {
   const base = req.protocol + "://" + req.get("host");
   return {
-    directUrl: base + "/api/proxy?url=" + encodeURIComponent(base + "/api/videos/" + id),
-    embedUrl:  base + "/embed/" + id,
+    vidUrl:    base + "/vid/" + id,
+    directUrl: base + "/api/proxy?url=" + encodeURIComponent(rawUrl || ""),
   };
 }
 app.get("/api/videos/folder/:folderId", authMiddleware, async (req, res) => {
   const videos = await Video.find({ folderId: req.params.folderId }).sort({ createdAt: -1 });
-  res.json({ data: videos.map((v) => ({ ...v.toObject(), ...makeLinks(req, v._id) })) });
+  res.json({ data: videos.map((v) => ({ ...v.toObject(), ...makeLinks(req, v._id, v.url) })) });
 });
 app.get("/api/videos/:id", async (req, res) => {
   const video = await Video.findById(req.params.id);
   if (!video) return res.status(404).json({ error: "Not found" });
-  res.json({ data: { ...video.toObject(), ...makeLinks(req, video._id) } });
+  res.json({ data: { ...video.toObject(), ...makeLinks(req, video._id, video.url) } });
 });
 app.post("/api/videos", authMiddleware, async (req, res) => {
   const video = await Video.create(req.body);
-  res.status(201).json({ data: { ...video.toObject(), ...makeLinks(req, video._id) } });
+  res.status(201).json({ data: { ...video.toObject(), ...makeLinks(req, video._id, video.url) } });
 });
 app.patch("/api/videos/:id", authMiddleware, async (req, res) => {
   const video = await Video.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json({ data: { ...video.toObject(), ...makeLinks(req, video._id) } });
+  res.json({ data: { ...video.toObject(), ...makeLinks(req, video._id, video.url) } });
 });
 app.delete("/api/videos/:id", authMiddleware, async (req, res) => {
   await Video.findByIdAndDelete(req.params.id);
@@ -154,9 +154,9 @@ app.options("/api/proxy", (req, res) => {
   res.sendStatus(204);
 });
 
-// ── Embed route — serves embed.html for /embed/:id ───────
-app.get("/embed/:id", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "embed.html"));
+// ── Vid route — serves vid.html for /vid/:id ─────────────
+app.get("/vid/:id", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "vid.html"));
 });
 
 app.listen(PORT, () => console.log("KiroPlayr running on port", PORT));
