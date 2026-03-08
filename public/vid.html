@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KiroPlyr</title>
+
+  <!-- Vidstack default theme & video layout styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1.12.12/player/styles/default/theme.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1.12.12/player/styles/default/layouts/video.css" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+
+    #wrap {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    media-player {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Loading ── */
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: #09090b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: #71717a;
+      font-family: system-ui, sans-serif;
+      font-size: 0.82rem;
+      z-index: 50;
+      transition: opacity 0.25s ease;
+    }
+
+    #loading.fade {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .spin {
+      width: 32px;
+      height: 32px;
+      border: 2.5px solid #27272a;
+      border-top-color: #a1a1aa;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error ── */
+    #error {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #09090b;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #71717a;
+      font-family: system-ui, sans-serif;
+      font-size: 0.82rem;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    #error svg { color: #ef4444; margin-bottom: 6px; }
+    #error strong { color: #fafafa; font-size: 1rem; display: block; margin-bottom: 4px; }
+  </style>
+
+  <!-- Import map so bare specifiers resolve to CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "vidstack/player":                "https://cdn.jsdelivr.net/npm/vidstack@1.12.12/dist/cdn/vidstack.js",
+      "vidstack/player/layouts/default":"https://cdn.jsdelivr.net/npm/vidstack@1.12.12/dist/cdn/vidstack.js",
+      "vidstack/player/ui":             "https://cdn.jsdelivr.net/npm/vidstack@1.12.12/dist/cdn/vidstack.js"
+    }
+  }
+  </script>
+
+  <!-- Load Vidstack web components -->
+  <script type="module">
+    import 'vidstack/player';
+    import 'vidstack/player/layouts/default';
+    import 'vidstack/player/ui';
+  </script>
+</head>
+<body>
+
+<div id="wrap">
+
+  <div id="loading">
+    <div class="spin"></div>
+    <span id="load-txt">Loading…</span>
+  </div>
+
+  <div id="error">
+    <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <strong id="err-title">Video not found</strong>
+    <span id="err-msg">Could not load the requested video.</span>
+  </div>
+
+  <!-- Vidstack web component player (hidden until ready) -->
+  <media-player
+    id="player"
+    view-type="video"
+    stream-type="on-demand"
+    log-level="warn"
+    crossorigin
+    playsinline
+    style="display:none"
+  >
+    <media-provider>
+      <media-poster class="vds-poster"></media-poster>
+      <!-- <source> injected by JS -->
+    </media-provider>
+    <media-video-layout></media-video-layout>
+  </media-player>
+
+</div>
+
+<script>
+  const API = 'https://kiroplyr.onrender.com';
+
+  async function init() {
+    // Support both /vid/VIDEO_ID and /vid?id=VIDEO_ID
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const videoId = parts[parts.length - 1] ||
+                    new URLSearchParams(window.location.search).get('id');
+
+    if (!videoId || videoId === 'vid') return showError('No video ID in URL.');
+
+    document.getElementById('load-txt').textContent = 'Fetching video info…';
+
+    try {
+      const res = await fetch(`${API}/api/videos/${videoId}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { data } = await res.json();
+      if (!data?.url) throw new Error('Video URL missing from response.');
+
+      // Route raw URL through the proxy so archive.org CORS is bypassed
+      const proxied = `${API}/api/proxy?url=${encodeURIComponent(data.url)}`;
+
+      const player   = document.getElementById('player');
+      const provider = player.querySelector('media-provider');
+
+      // Set title
+      if (data.title) player.setAttribute('title', data.title);
+
+      // Inject <source> into media-provider
+      const src = document.createElement('source');
+      src.src  = proxied;
+      src.type = 'video/mp4';
+      provider.appendChild(src);
+
+      // Show player once Vidstack custom elements are defined & can-play fires
+      player.style.display = '';
+
+      player.addEventListener('can-play', hideLoading, { once: true });
+      // Safety fallback — show player after 4 s regardless
+      setTimeout(hideLoading, 4000);
+
+    } catch (err) {
+      console.error(err);
+      showError(err.message);
+    }
+  }
+
+  function hideLoading() {
+    const el = document.getElementById('loading');
+    el.classList.add('fade');
+    setTimeout(() => el.remove(), 280);
+  }
+
+  function showError(msg) {
+    document.getElementById('loading').style.display = 'none';
+    const el = document.getElementById('error');
+    el.style.display = 'flex';
+    document.getElementById('err-msg').textContent = msg;
+  }
+
+  // Wait until custom elements (vidstack) are ready, then fetch video
+  customElements.whenDefined('media-player').then(init).catch(() => init());
+</script>
+
+</body>
+</html>
