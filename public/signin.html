@@ -4,561 +4,418 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KiroPlyr — Sign In</title>
-  <link rel="shortcut icon" href="img/fav-icon.png" type="image/x-icon" />
 
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
-
-  <!-- Geist font (closest to shadcn) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* ── Reset & Base ── */
+    :root {
+      --bg:        #09090b;
+      --card:      #0f0f11;
+      --border:    #27272a;
+      --input-bg:  #18181b;
+      --muted:     #a1a1aa;
+      --fg:        #fafafa;
+      --accent:    #ffffff;
+      --danger:    #ef4444;
+      --radius:    0.5rem;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg:          #09090b;
-      --card-bg:     #0f0f11;
-      --border:      #27272a;
-      --border-hover:#3f3f46;
-      --muted:       #71717a;
-      --muted-fg:    #a1a1aa;
-      --fg:          #fafafa;
-      --fg-secondary:#e4e4e7;
-      --primary:     #ffffff;
-      --primary-fg:  #09090b;
-      --ring:        rgba(255,255,255,0.15);
-      --radius:      8px;
-      --font:        'Outfit', system-ui, sans-serif;
-    }
-
     html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: var(--font);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    ::selection { background: rgba(255,255,255,0.15); color: var(--fg); }
-
-    /* ── Page layout ── */
-    .page-wrap {
       min-height: 100vh;
+      background: var(--bg);
+      font-family: 'Outfit', sans-serif;
+      color: var(--fg);
       display: flex;
       flex-direction: column;
     }
 
-    /* ── Navbar ── */
-    .kiro-nav {
-      padding: 18px 24px;
-      border-bottom: 1px solid var(--border);
+    /* ----- NAV ----- */
+    nav {
       display: flex;
       align-items: center;
-      background: var(--bg);
+      padding: 0 2rem;
+      height: 60px;
+      border-bottom: 1px solid var(--border);
     }
 
-    .kiro-brand {
-      font-size: 1.15rem;
+    .nav-brand {
+      font-size: 1.1rem;
       font-weight: 700;
+      letter-spacing: -0.02em;
       color: var(--fg);
       text-decoration: none;
-      letter-spacing: -0.02em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
-    .kiro-brand svg { flex-shrink: 0; }
+    .nav-brand span { color: var(--muted); font-weight: 400; }
 
-    /* ── Main center ── */
-    .sign-main {
+    /* ----- MAIN ----- */
+    main {
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 48px 16px;
+      padding: 2rem 1rem;
     }
 
-    /* ── Card ── */
-    .sign-card {
+    .card {
       width: 100%;
       max-width: 400px;
-      background: var(--card-bg);
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 32px;
+      border-radius: var(--radius);
+      padding: 2rem;
     }
 
-    .sign-header { margin-bottom: 28px; }
+    .card-header {
+      margin-bottom: 1.75rem;
+    }
 
-    .sign-header h1 {
-      font-size: 1.5rem;
+    .card-header h1 {
+      font-size: 1.4rem;
       font-weight: 600;
-      letter-spacing: -0.025em;
-      color: var(--fg);
-      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.3rem;
     }
 
-    .sign-header p {
-      font-size: 0.875rem;
-      color: var(--muted-fg);
-      font-weight: 400;
+    .card-header p {
+      font-size: 0.85rem;
+      color: var(--muted);
     }
 
-    /* ── Form fields ── */
-    .field-group {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 20px;
+    /* ----- FORM ----- */
+    .form-group {
+      margin-bottom: 1rem;
     }
 
-    .field-label {
+    label {
       display: block;
-      font-size: 0.8125rem;
+      font-size: 0.82rem;
       font-weight: 500;
-      color: var(--fg-secondary);
-      margin-bottom: 7px;
-      letter-spacing: 0.01em;
+      color: var(--fg);
+      margin-bottom: 0.4rem;
     }
 
-    .field-input {
+    input[type="text"],
+    input[type="password"] {
       width: 100%;
-      background: var(--bg);
+      background: var(--input-bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       color: var(--fg);
-      font-family: var(--font);
+      font-family: inherit;
       font-size: 0.9rem;
-      font-weight: 400;
-      padding: 10px 12px;
+      padding: 0.6rem 0.875rem;
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
 
-    .field-input::placeholder { color: var(--muted); }
+    input[type="text"]::placeholder,
+    input[type="password"]::placeholder { color: #52525b; }
 
-    .field-input:focus {
-      border-color: var(--border-hover);
-      box-shadow: 0 0 0 3px var(--ring);
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: #71717a;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
     }
 
-    .field-input:hover:not(:focus) {
-      border-color: var(--border-hover);
+    /* Password wrapper for toggle */
+    .pw-wrap {
+      position: relative;
     }
 
-    /* Password wrapper */
-    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 2.75rem; }
 
     .pw-toggle {
       position: absolute;
-      right: 10px;
       top: 50%;
+      right: 0.75rem;
       transform: translateY(-50%);
       background: none;
       border: none;
-      color: var(--muted);
       cursor: pointer;
-      padding: 4px;
+      color: var(--muted);
       display: flex;
       align-items: center;
-      transition: color 0.15s;
+      padding: 0;
+      line-height: 1;
     }
 
     .pw-toggle:hover { color: var(--fg); }
 
-    /* ── Remember + forgot row ── */
-    .meta-row {
+    /* Remember me */
+    .remember-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 22px;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      margin-top: 0.25rem;
     }
 
-    .remember {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .remember-row input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--accent);
       cursor: pointer;
-      user-select: none;
     }
 
-    .remember-box {
-      width: 16px;
-      height: 16px;
-      border: 1px solid var(--border-hover);
-      border-radius: 3px;
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s;
-      flex-shrink: 0;
+    .remember-row label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin: 0;
+      cursor: pointer;
     }
 
-    #cbx:checked ~ .remember-box {
-      background: var(--fg);
-      border-color: var(--fg);
-    }
-
-    #cbx:checked ~ .remember-box svg { display: block; }
-
-    .remember-box svg {
-      display: none;
-      width: 10px;
-      height: 10px;
-    }
-
-    .remember-text {
-      font-size: 0.8125rem;
-      color: var(--muted-fg);
-      font-weight: 400;
-    }
-
-    .forgot-link {
-      font-size: 0.8125rem;
-      color: var(--muted-fg);
-      text-decoration: none;
-      font-weight: 400;
-      transition: color 0.15s;
-    }
-
-    .forgot-link:hover { color: var(--fg); }
-
-    /* ── Submit button ── */
-    .btn-signin {
+    /* Submit button */
+    .btn-primary {
       width: 100%;
-      background: var(--primary);
-      color: var(--primary-fg);
-      font-family: var(--font);
-      font-size: 0.9rem;
-      font-weight: 600;
+      background: var(--accent);
+      color: #09090b;
       border: none;
       border-radius: var(--radius);
-      padding: 11px 16px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.65rem;
       cursor: pointer;
-      transition: background 0.15s, opacity 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      letter-spacing: 0.01em;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: -0.01em;
     }
 
-    .btn-signin:hover { background: #e4e4e7; }
-
-    .btn-signin:active { background: #d4d4d8; }
-
-    .btn-signin:disabled {
+    .btn-primary:hover { background: #e4e4e7; }
+    .btn-primary:active { transform: scale(0.99); }
+    .btn-primary:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
 
-    .btn-spinner {
-      width: 15px;
-      height: 15px;
-      border: 2px solid rgba(9,9,11,0.25);
-      border-top-color: var(--primary-fg);
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      display: none;
-    }
-
-    .btn-signin.loading .btn-spinner { display: block; }
-    .btn-signin.loading .btn-text { display: none; }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Alert ── */
-    .kiro-alert {
+    /* ----- ALERT ----- */
+    .alert {
+      font-size: 0.82rem;
+      padding: 0.65rem 0.875rem;
       border-radius: var(--radius);
-      padding: 11px 14px;
-      font-size: 0.8125rem;
-      font-weight: 500;
-      margin-bottom: 18px;
+      margin-bottom: 1rem;
       display: none;
-      border: 1px solid;
     }
 
-    .kiro-alert.error {
-      background: rgba(239, 68, 68, 0.08);
-      border-color: rgba(239, 68, 68, 0.3);
+    .alert.error {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.3);
       color: #fca5a5;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
-    /* ── Divider ── */
-    .sign-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 22px 0;
+    .alert.success {
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: #86efac;
     }
 
-    .sign-divider span {
-      font-size: 0.75rem;
-      color: var(--muted);
-      white-space: nowrap;
-    }
+    .alert.show { display: block; }
 
-    .sign-divider::before,
-    .sign-divider::after {
-      content: '';
-      flex: 1;
+    /* ----- DIVIDER ----- */
+    .divider {
       height: 1px;
       background: var(--border);
+      margin: 1.5rem 0;
     }
 
-    /* ── Footer ── */
-    .sign-footer-note {
-      font-size: 0.75rem;
-      color: var(--muted);
+    /* ----- FOOTER LINKS ----- */
+    .card-footer {
       text-align: center;
-      margin-top: 20px;
-      line-height: 1.6;
+      font-size: 0.82rem;
+      color: var(--muted);
     }
 
-    .sign-footer-note a {
-      color: var(--muted-fg);
-      text-decoration: underline;
-      text-underline-offset: 2px;
+    .card-footer a {
+      color: var(--fg);
+      font-weight: 500;
+      text-decoration: none;
     }
 
-    /* ── Page footer ── */
-    .page-footer {
+    .card-footer a:hover { text-decoration: underline; }
+
+    /* Loading spinner inside button */
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .btn-spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    /* ----- PAGE FOOTER ----- */
+    footer {
+      padding: 1.25rem 2rem;
       border-top: 1px solid var(--border);
-      padding: 24px;
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+      gap: 0.75rem 1.5rem;
+      justify-content: center;
     }
 
-    .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .footer-links a {
+    footer a {
       font-size: 0.78rem;
       color: var(--muted);
       text-decoration: none;
-      transition: color 0.15s;
     }
 
-    .footer-links a:hover { color: var(--muted-fg); }
-
-    .footer-copy {
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 480px) {
-      .sign-card {
-        border: none;
-        border-radius: 0;
-        background: var(--bg);
-        padding: 28px 20px;
-      }
-    }
+    footer a:hover { color: var(--fg); }
   </style>
 </head>
 <body>
-<div class="page-wrap">
 
-  <!-- Navbar -->
-  <nav class="kiro-nav">
-    <a href="index.html" class="kiro-brand">
-      <!-- Play icon -->
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <rect width="24" height="24" rx="6" fill="white"/>
-        <path d="M9.5 7.5L17 12L9.5 16.5V7.5Z" fill="#09090b"/>
-      </svg>
-      KiroPlyr
-    </a>
+  <nav>
+    <a href="index.html" class="nav-brand">Kiro<span>Plyr</span></a>
   </nav>
 
-  <!-- Main -->
-  <main class="sign-main">
-    <div class="sign-card">
+  <main>
+    <div class="card">
 
-      <div class="sign-header">
-        <h1>Welcome back</h1>
-        <p>Sign in to your KiroPlyr account</p>
+      <div class="card-header">
+        <h1>Sign in</h1>
+        <p>Welcome back. Enter your credentials to continue.</p>
       </div>
 
-      <!-- Error alert -->
-      <div class="kiro-alert error" id="alertBox">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="alertMsg">Invalid credentials.</span>
-      </div>
+      <div id="alert" class="alert"></div>
 
-      <form id="loginForm" novalidate>
-        <div class="field-group">
+      <form id="loginForm" autocomplete="off" novalidate>
 
-          <!-- Username -->
-          <div>
-            <label class="field-label" for="floatingInput">Username</label>
-            <input
-              type="text"
-              class="field-input"
-              id="floatingInput"
-              placeholder="Enter your username"
-              autocomplete="username"
-              required
-            />
-          </div>
-
-          <!-- Password -->
-          <div>
-            <label class="field-label" for="floatingPassword">Password</label>
-            <div class="pw-wrap">
-              <input
-                type="password"
-                class="field-input"
-                id="floatingPassword"
-                placeholder="Enter your password"
-                autocomplete="current-password"
-                style="padding-right: 40px"
-                required
-              />
-              <button type="button" class="pw-toggle" id="pwToggle" aria-label="Toggle password">
-                <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter your username" autocomplete="username" required />
         </div>
 
-        <!-- Remember + forgot -->
-        <div class="meta-row">
-          <label class="remember" for="cbx">
-            <input type="checkbox" id="cbx" style="display:none" checked />
-            <span class="remember-box">
-              <svg viewBox="0 0 10 10" fill="none" stroke="#09090b" stroke-width="2">
-                <polyline points="1.5,5 4,7.5 8.5,2.5"/>
-              </svg>
-            </span>
-            <span class="remember-text">Remember me</span>
-          </label>
-          <a href="#" class="forgot-link">Forgot password?</a>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" required />
+            <button type="button" class="pw-toggle" id="pwToggle" aria-label="Toggle password visibility">
+              <!-- Eye icon (show) -->
+              <svg id="eyeShow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <!-- Eye-off icon (hide) - hidden by default -->
+              <svg id="eyeHide" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
         </div>
 
-        <button type="submit" class="btn-signin" id="submitBtn">
-          <span class="btn-text">Sign In</span>
-          <span class="btn-spinner"></span>
-        </button>
+        <div class="remember-row">
+          <input type="checkbox" id="remember" checked />
+          <label for="remember">Remember me</label>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">Sign in</button>
+
       </form>
 
-      <p class="sign-footer-note">
-        By signing in, you agree to our
-        <a href="#">Terms of Service</a> and
-        <a href="#">Privacy Policy</a>.
-      </p>
+      <div class="divider"></div>
+
+      <div class="card-footer">
+        <p><a href="#">Forgot password?</a></p>
+      </div>
 
     </div>
   </main>
 
-  <!-- Page footer -->
-  <footer class="page-footer">
-    <div class="footer-links">
-      <a href="#">FAQ</a>
-      <a href="#">Help Center</a>
-      <a href="#">Terms of Use</a>
-      <a href="#">Privacy</a>
-    </div>
-    <span class="footer-copy">© 2025 KiroPlyr</span>
+  <footer>
+    <a href="#">FAQ</a>
+    <a href="#">Help Center</a>
+    <a href="#">Terms of Use</a>
+    <a href="#">Privacy</a>
   </footer>
 
-</div>
+  <script>
+    const API_BASE = 'https://kiroplyr.onrender.com';
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-<script>
-  const API_BASE = 'https://kiroplyr.onrender.com';
-
-  // Redirect if already logged in
-  if (localStorage.getItem('kiro_token')) {
-    window.location.href = 'index.html';
-  }
-
-  // Password toggle
-  const pwToggle = document.getElementById('pwToggle');
-  const pwInput  = document.getElementById('floatingPassword');
-  const eyeIcon  = document.getElementById('eyeIcon');
-
-  const eyeOpen   = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
-  const eyeClosed = `<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19M1 1l22 22"/>`;
-
-  pwToggle.addEventListener('click', () => {
-    const show = pwInput.type === 'password';
-    pwInput.type = show ? 'text' : 'password';
-    eyeIcon.innerHTML = show ? eyeClosed : eyeOpen;
-  });
-
-  // Login form
-  const form      = document.getElementById('loginForm');
-  const submitBtn = document.getElementById('submitBtn');
-  const alertBox  = document.getElementById('alertBox');
-  const alertMsg  = document.getElementById('alertMsg');
-
-  function showError(msg) {
-    alertMsg.textContent = msg;
-    alertBox.style.display = 'flex';
-  }
-
-  function hideError() {
-    alertBox.style.display = 'none';
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    hideError();
-
-    const username = document.getElementById('floatingInput').value.trim();
-    const password = document.getElementById('floatingPassword').value;
-
-    if (!username || !password) {
-      showError('Please fill in all fields.');
-      return;
+    // Redirect if already logged in
+    if (localStorage.getItem('kiro_token')) {
+      window.location.replace('index.html');
     }
 
-    submitBtn.classList.add('loading');
-    submitBtn.disabled = true;
+    // Password toggle
+    const pwToggle = document.getElementById('pwToggle');
+    const pwInput  = document.getElementById('password');
+    const eyeShow  = document.getElementById('eyeShow');
+    const eyeHide  = document.getElementById('eyeHide');
 
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+    pwToggle.addEventListener('click', () => {
+      const isHidden = pwInput.type === 'password';
+      pwInput.type = isHidden ? 'text' : 'password';
+      eyeShow.style.display = isHidden ? 'none' : '';
+      eyeHide.style.display = isHidden ? ''     : 'none';
+    });
 
-      const data = await res.json();
+    // Alert helper
+    function showAlert(msg, type = 'error') {
+      const el = document.getElementById('alert');
+      el.textContent = msg;
+      el.className = `alert ${type} show`;
+    }
 
-      if (res.ok) {
-        localStorage.setItem('kiro_token', data.token);
-        localStorage.setItem('kiro_username', data.username);
-        localStorage.setItem('kiro_role', data.role || 'admin');
-        window.location.href = 'index.html';
-      } else {
-        showError(data.error || 'Invalid credentials. Please try again.');
+    function hideAlert() {
+      document.getElementById('alert').className = 'alert';
+    }
+
+    // Form submit
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const remember = document.getElementById('remember').checked;
+      const btn = document.getElementById('submitBtn');
+
+      if (!username || !password) {
+        showAlert('Please fill in all fields.');
+        return;
       }
-    } catch (err) {
-      showError('Connection error. Please check your internet and try again.');
-    } finally {
-      submitBtn.classList.remove('loading');
-      submitBtn.disabled = false;
-    }
-  });
-</script>
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn-spinner"></span>Signing in…';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Invalid credentials.');
+        }
+
+        const token    = data.data?.token    || data.token;
+        const uname    = data.data?.username || data.username;
+
+        if (remember) {
+          localStorage.setItem('kiro_token', token);
+          localStorage.setItem('kiro_username', uname);
+        } else {
+          sessionStorage.setItem('kiro_token', token);
+          sessionStorage.setItem('kiro_username', uname);
+        }
+
+        showAlert('Login successful! Redirecting…', 'success');
+        setTimeout(() => window.location.replace('index.html'), 700);
+
+      } catch (err) {
+        showAlert(err.message || 'Connection error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    });
+  </script>
+
 </body>
 </html>
