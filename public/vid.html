@@ -147,47 +147,25 @@
   const API = 'https://kiroplyr.onrender.com';
 
   async function init() {
-    // Support both /vid/VIDEO_ID and /vid?id=VIDEO_ID
-    const parts = window.location.pathname.split('/').filter(Boolean);
-    const videoId = parts[parts.length - 1] ||
-                    new URLSearchParams(window.location.search).get('id');
+    const rawUrl = new URLSearchParams(window.location.search).get('url');
 
-    if (!videoId || videoId === 'vid') return showError('No video ID in URL.');
+    if (!rawUrl) return showError('No video URL provided.');
 
-    document.getElementById('load-txt').textContent = 'Fetching video info…';
+    // Route through proxy to bypass archive.org CORS
+    const proxied = `${API}/api/proxy?url=${encodeURIComponent(rawUrl)}`;
 
-    try {
-      const res = await fetch(`${API}/api/videos/${videoId}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { data } = await res.json();
-      if (!data?.url) throw new Error('Video URL missing from response.');
+    const player   = document.getElementById('player');
+    const provider = player.querySelector('media-provider');
 
-      // Route raw URL through the proxy so archive.org CORS is bypassed
-      const proxied = `${API}/api/proxy?url=${encodeURIComponent(data.url)}`;
+    // Inject <source> into media-provider
+    const src = document.createElement('source');
+    src.src  = proxied;
+    src.type = 'video/mp4';
+    provider.appendChild(src);
 
-      const player   = document.getElementById('player');
-      const provider = player.querySelector('media-provider');
-
-      // Set title
-      if (data.title) player.setAttribute('title', data.title);
-
-      // Inject <source> into media-provider
-      const src = document.createElement('source');
-      src.src  = proxied;
-      src.type = 'video/mp4';
-      provider.appendChild(src);
-
-      // Show player once Vidstack custom elements are defined & can-play fires
-      player.style.display = '';
-
-      player.addEventListener('can-play', hideLoading, { once: true });
-      // Safety fallback — show player after 4 s regardless
-      setTimeout(hideLoading, 4000);
-
-    } catch (err) {
-      console.error(err);
-      showError(err.message);
-    }
+    player.style.display = '';
+    player.addEventListener('can-play', hideLoading, { once: true });
+    setTimeout(hideLoading, 4000);
   }
 
   function hideLoading() {
@@ -203,7 +181,6 @@
     document.getElementById('err-msg').textContent = msg;
   }
 
-  // Wait until custom elements (vidstack) are ready, then fetch video
   customElements.whenDefined('media-player').then(init).catch(() => init());
 </script>
 
