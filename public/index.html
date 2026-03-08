@@ -893,13 +893,13 @@
       return;
     }
 
-    const embedBase = `${API}/embed/`;
+    const embedBase = `${API}/vid/`;
     const proxyBase = `${API}/api/proxy?url=`;
 
     document.getElementById('mainContent').innerHTML = `
       <div class="video-grid">
         ${videos.map(v => {
-          const embedUrl  = embedBase + v._id;
+          const vidUrl    = embedBase + v._id;
           const proxyUrl  = proxyBase + encodeURIComponent(v.url);
           return `
           <div class="video-card" id="vc-${v._id}">
@@ -908,9 +908,9 @@
               <div class="video-url-text">${escHtml(v.url)}</div>
               <div class="video-links">
                 <div class="link-row">
-                  <span class="link-label">Embed</span>
-                  <input class="link-copy-input" readonly value="${escHtml(embedUrl)}" onclick="copyInput(this)" title="Click to copy embed URL" />
-                  <button class="btn btn-default btn-sm" onclick="copyText('${escHtml(embedUrl)}')">Copy</button>
+                  <span class="link-label">Vid</span>
+                  <input class="link-copy-input" readonly value="${escHtml(vidUrl)}" onclick="copyInput(this)" title="Click to copy vid URL" />
+                  <button class="btn btn-default btn-sm" onclick="copyText('${escHtml(vidUrl)}')">Copy</button>
                 </div>
                 <div class="link-row">
                   <span class="link-label">Direct</span>
@@ -920,7 +920,7 @@
               </div>
             </div>
             <div class="video-card-footer">
-              <button class="btn btn-default btn-sm" onclick="window.open('${escHtml(embedUrl)}', '_blank')">
+              <button class="btn btn-default btn-sm" onclick="window.open('${escHtml(vidUrl)}', '_blank')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 Watch
               </button>
