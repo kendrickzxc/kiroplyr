@@ -87,9 +87,10 @@ app.delete("/api/folders/:id", authMiddleware, async (req, res) => {
 // ── Video routes ─────────────────────────────────────────
 function makeLinks(req, id, rawUrl) {
   const base = req.protocol + "://" + req.get("host");
+  const proxied = base + "/api/proxy?url=" + encodeURIComponent(rawUrl || "");
   return {
-    vidUrl:    base + "/vid/" + id,
-    directUrl: base + "/api/proxy?url=" + encodeURIComponent(rawUrl || ""),
+    vidUrl:    base + "/vid?url=" + encodeURIComponent(rawUrl || ""),
+    directUrl: proxied,
   };
 }
 app.get("/api/videos/folder/:folderId", authMiddleware, async (req, res) => {
@@ -154,8 +155,8 @@ app.options("/api/proxy", (req, res) => {
   res.sendStatus(204);
 });
 
-// ── Vid route — serves vid.html for /vid/:id ─────────────
-app.get("/vid/:id", (req, res) => {
+// ── Vid route — serves vid.html for /vid?url=... ─────────
+app.get("/vid", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "vid.html"));
 });
 
